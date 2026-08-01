@@ -254,7 +254,10 @@ async function loadQuestion() {
   feedback.value = null;
 
   try {
-    const payload = await fetchQuestion(currentLevel.value, currentMode.value);
+    const payload = createQuestion(currentLevel.value, currentMode.value);
+    if (!payload) {
+      throw new Error("Aucune question disponible pour ce niveau.");
+    }
     currentQuestion.value = payload;
     answer.value = "";
 
@@ -480,8 +483,11 @@ onUnmounted(() => {
         </div>
 
         <div class="answer-panel">
+          <label class="answer-label" for="answer-input">Ta reponse</label>
           <div class="answer-row">
             <input
+              id="answer-input"
+              class="answer-input"
               ref="answerInput"
               v-model="answer"
               type="text"

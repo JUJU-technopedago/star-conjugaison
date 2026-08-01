@@ -104,7 +104,13 @@ function cleanExpiredQuestions() {
 }
 
 function getLemma(entry) {
-  return entry?.infinitif?.['présent']?.[0] ?? 'verbe inconnu';
+  return (
+    entry?.infinitif?.['présent']?.[0] ??
+    entry?.Infinitif?.['Présent']?.[0] ??
+    entry?.infinitif?.['Present']?.[0] ??
+    entry?.Infinitif?.['Present']?.[0] ??
+    'verbe inconnu'
+  );
 }
 
 function isSixPersonTense(forms) {

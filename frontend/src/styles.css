@@ -8,6 +8,7 @@
   --ok: #15803d;
   --ko: #b91c1c;
   --shadow: 0 20px 40px rgba(15, 23, 42, 0.12);
+  color-scheme: light;
 }
 
 * {
@@ -401,6 +402,35 @@ button:disabled {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   padding: 12px;
+}
+
+.answer-label {
+  display: inline-block;
+  margin: 0 0 8px;
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.answer-input {
+  width: 100%;
+  color: #0f172a;
+  background: #ffffff;
+  border: 2px solid #93c5fd;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9);
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.answer-input::placeholder {
+  color: #64748b;
+  opacity: 1;
+}
+
+.answer-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
 .timer {
