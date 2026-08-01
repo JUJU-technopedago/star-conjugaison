@@ -45,10 +45,6 @@ const score = computed(() => {
 const levelList = computed(() => Object.keys(config.value.levels).length ? Object.keys(config.value.levels) : fallbackLevels);
 const modeList = computed(() => Object.entries(config.value.modes).length ? Object.entries(config.value.modes) : Object.entries(fallbackModes));
 
-const currentModeLabel = computed(() => {
-  return config.value.modes?.[currentMode.value]?.label ?? fallbackModes[currentMode.value]?.label ?? "Mode libre";
-});
-
 const currentGameNumber = computed(() => clampGameNumber(journey.value.currentGame));
 const currentGameState = computed(() => getGameState(journey.value, currentGameNumber.value) ?? journey.value.gameStates[0]);
 
@@ -455,32 +451,7 @@ onUnmounted(() => {
           <h2>{{ currentQuestion.prompt }}</h2>
         </div>
 
-        <div class="quiz-info-grid">
-          <article class="quiz-info-card">
-            <p class="quiz-info-label">Verbe</p>
-            <p class="quiz-info-value">{{ currentQuestion.lemma }}</p>
-          </article>
-          <article class="quiz-info-card">
-            <p class="quiz-info-label">Mode verbal</p>
-            <p class="quiz-info-value">{{ currentQuestion.mood }}</p>
-          </article>
-          <article class="quiz-info-card">
-            <p class="quiz-info-label">Temps</p>
-            <p class="quiz-info-value">{{ currentQuestion.tense }}</p>
-          </article>
-          <article class="quiz-info-card">
-            <p class="quiz-info-label">Personne</p>
-            <p class="quiz-info-value">{{ currentQuestion.person }}</p>
-          </article>
-          <article class="quiz-info-card">
-            <p class="quiz-info-label">Mode de jeu</p>
-            <p class="quiz-info-value">{{ currentModeLabel }}</p>
-          </article>
-          <article class="quiz-info-card timer-card" v-if="timeLeft !== null">
-            <p class="quiz-info-label">Temps restant</p>
-            <p class="quiz-info-value timer">{{ timeLeft }}s</p>
-          </article>
-        </div>
+        <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
         <div class="answer-panel">
           <label class="answer-label" for="answer-input">Ta reponse</label>

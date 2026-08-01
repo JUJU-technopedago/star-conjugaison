@@ -366,37 +366,6 @@ button:disabled {
   letter-spacing: 0.02em;
 }
 
-.quiz-info-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-bottom: 12px;
-}
-
-.quiz-info-card {
-  background: #f8fafc;
-  border: 1px solid #dbeafe;
-  border-radius: 12px;
-  padding: 10px 12px;
-}
-
-.quiz-info-label {
-  margin: 0 0 4px;
-  color: #475569;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.quiz-info-value {
-  margin: 0;
-  font-weight: 700;
-}
-
-.timer-card {
-  background: #ffedd5;
-  border-color: #fdba74;
-}
-
 .answer-panel {
   background: #fff;
   border: 1px solid #e2e8f0;
@@ -433,8 +402,10 @@ button:disabled {
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-.timer {
+.timer-inline {
+  margin: 0 0 10px;
   color: #7c2d12;
+  font-weight: 700;
 }
 
 .special-keyboard {
@@ -550,10 +521,6 @@ button:disabled {
     justify-content: flex-start;
   }
 
-  .quiz-info-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-
   .answer-row {
     grid-template-columns: 1fr;
   }
@@ -588,9 +555,6 @@ button:disabled {
     overflow: auto;
   }
 
-  .quiz-info-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
 }
 
 @media (max-width: 430px) {
@@ -600,10 +564,6 @@ button:disabled {
 
   .journey-rail-subtitle {
     font-size: 0.84rem;
-  }
-
-  .quiz-info-grid {
-    grid-template-columns: 1fr;
   }
 
   .quiz-badge {
