@@ -448,7 +448,7 @@ onUnmounted(() => {
       <section class="card quiz" v-if="currentQuestion">
         <div class="quiz-main-card">
           <p class="quiz-badge">Defi en cours</p>
-          <h2>{{ currentQuestion.prompt }}</h2>
+          <h2 v-html="currentQuestion.promptHtml ?? currentQuestion.prompt"></h2>
         </div>
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>

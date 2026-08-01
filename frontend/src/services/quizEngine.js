@@ -48,10 +48,36 @@ function expandGloballyAllowedVerbs() {
   return expandReflexiveVariants(GLOBAL_ALLOWED_VERBS);
 }
 
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function formatVerbForPrompt(lemma) {
+  return escapeHtml(String(lemma).toLocaleUpperCase('fr-FR'));
+}
+
+function formatModeAndTenseForPrompt(mood, tense) {
+  return escapeHtml(`${String(mood).toLocaleLowerCase('fr-FR')} ${String(tense).toLocaleLowerCase('fr-FR')}`);
+}
+
+function formatPersonForPrompt(person) {
+  return escapeHtml(String(person));
+}
+
 function buildQuestionByMode(mode, selected) {
+  const verbPrompt = formatVerbForPrompt(selected.lemma);
+  const moodAndTensePrompt = formatModeAndTenseForPrompt(selected.moodRaw, selected.tenseRaw);
+  const personPrompt = formatPersonForPrompt(selected.personLabel);
+
   if (mode === 'trouver_le_temps') {
     return {
       prompt: `Trouve le temps de "${selected.expected}" (${selected.personLabel}) pour ${selected.lemma}`,
+      promptHtml: `Trouve le temps de <strong>"${escapeHtml(selected.expected)}"</strong> pour le verbe <strong>"${verbPrompt}"</strong>, à la personne <strong>"${personPrompt}"</strong>`,
       expected: selected.tenseRaw,
       matchStrategy: 'key',
       details: {
@@ -64,6 +90,7 @@ function buildQuestionByMode(mode, selected) {
   if (mode === 'trouver_infinitif') {
     return {
       prompt: `Trouve l'infinitif de "${selected.expected}" (${selected.personLabel}, ${selected.moodRaw} ${selected.tenseRaw})`,
+      promptHtml: `Trouve l'infinitif de <strong>"${escapeHtml(selected.expected)}"</strong>, conjugué à <strong>${moodAndTensePrompt}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
       expected: selected.lemma,
       matchStrategy: 'key',
       details: {
@@ -76,7 +103,8 @@ function buildQuestionByMode(mode, selected) {
   }
 
   return {
-    prompt: `Conjugue ${selected.lemma} - ${selected.moodRaw} ${selected.tenseRaw} - ${selected.personLabel}`,
+    prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" à ${String(selected.moodRaw).toLocaleLowerCase('fr-FR')} ${String(selected.tenseRaw).toLocaleLowerCase('fr-FR')}, à la personne "${selected.personLabel}"`,
+    promptHtml: `Conjugue le verbe <strong>"${verbPrompt}"</strong> à <strong>${moodAndTensePrompt}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
     expected: selected.expected,
     matchStrategy: 'text',
     details: {
