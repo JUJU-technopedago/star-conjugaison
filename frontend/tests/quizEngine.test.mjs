@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createQuestion, checkAnswer, computeProgression } from '../src/services/quizEngine.js';
+import { normalizeText } from '../src/services/normalize.js';
 
 test('createQuestion returns a valid question and accepts the correct answer', () => {
   const question = createQuestion('A1', 'trouver_conjugaison', { random: () => 0 });
@@ -14,4 +15,9 @@ test('computeProgression promotes when the success rate is high enough', () => {
   const progression = computeProgression('A1', [true, true, true, true, true, true, true, true, true, true, true, true]);
   assert.equal(progression.promoted, true);
   assert.equal(progression.nextLevel, 'A2');
+});
+
+test('normalizeText matches a straightforward mobile-style answer', () => {
+  assert.equal(normalizeText('parles'), normalizeText('parles'));
+  assert.equal(normalizeText(' Parles '), normalizeText('parles'));
 });

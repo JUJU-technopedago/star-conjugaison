@@ -1,6 +1,7 @@
 <script setup>
 import { computed, onMounted, onUnmounted, ref } from "vue";
 import { createQuestion, checkAnswer, computeProgression, getLevelRules, getGameModes } from "./services/quizEngine";
+import { normalizeText } from "./services/normalize";
 import { playFinalWhistle, playTickSound, primeAudio } from "./services/timerAudio";
 import { TOTAL_GAMES, VERBS_PER_GAME, clampGameNumber, createDefaultJourneyProgress, getGameState, getNextGameNumber, getJourneyBoardSize, getJourneyCellLayout } from "./config/journey";
 
@@ -283,15 +284,23 @@ async function validateAnswer(forceSubmit = false) {
 
   try {
     const result = checkAnswer(currentQuestion.value.questionId, answer.value);
-    feedback.value = result;
+    const expectedAnswer = currentQuestion.value.expected ?? result.expected ?? "";
+    const normalizedUserAnswer = normalizeText(answer.value);
+    const normalizedExpectedAnswer = normalizeText(expectedAnswer);
+
+    feedback.value = {
+      ...result,
+      expected: expectedAnswer,
+      correct: result.correct || Boolean(expectedAnswer && normalizedUserAnswer === normalizedExpectedAnswer)
+    };
 
     ensureHistoryBucket(currentLevel.value);
-    historyByLevel.value[currentLevel.value].push(result.correct);
+    historyByLevel.value[currentLevel.value].push(feedback.value.correct);
 
     const currentGameStateValue = journey.value.gameStates[currentGameNumber.value - 1];
     if (currentGameStateValue) {
       currentGameStateValue.attempts += 1;
-      if (result.correct) {
+      if (feedback.value.correct) {
         currentGameStateValue.correct += 1;
       }
 
@@ -303,7 +312,7 @@ async function validateAnswer(forceSubmit = false) {
           journey.value.gameStates[nextGameNumber - 1].unlocked = true;
           syncLevelWithGame(nextGameNumber);
           feedback.value = {
-            ...result,
+            ...feedback.value,
             chapterCompleted: `Partie ${currentGameNumber.value}`,
             nextChapterTitle: `Partie ${nextGameNumber}`
           };
@@ -317,7 +326,7 @@ async function validateAnswer(forceSubmit = false) {
 
     if (progression.promoted && progression.nextLevel) {
       feedback.value = {
-        ...result,
+        ...feedback.value,
         promotedTo: progression.nextLevel
       };
     }
