@@ -42,6 +42,18 @@ html {
   align-items: start;
 }
 
+.app-credit {
+  position: fixed;
+  top: 8px;
+  right: max(10px, env(safe-area-inset-right));
+  margin: 0;
+  font-size: 0.62rem;
+  letter-spacing: 0.01em;
+  color: rgba(30, 41, 59, 0.6);
+  z-index: 40;
+  pointer-events: none;
+}
+
 .game-stage {
   display: grid;
   gap: 16px;
@@ -475,6 +487,12 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
+  .app-credit {
+    top: 6px;
+    right: max(8px, env(safe-area-inset-right));
+    font-size: 0.56rem;
+  }
+
   .page {
     padding: 14px;
     padding-left: max(14px, env(safe-area-inset-left));

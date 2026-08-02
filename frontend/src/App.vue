@@ -411,6 +411,7 @@ onUnmounted(() => {
 
 <template>
   <main class="page">
+    <p class="app-credit">développé par Julien Martinez-Monniello - 2026</p>
     <aside class="journey-rail" aria-label="Parcours de 200 parties">
       <div class="journey-rail-header">
         <p class="journey-rail-kicker">Parcours</p>
