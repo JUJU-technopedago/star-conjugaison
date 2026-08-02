@@ -63,14 +63,14 @@ const journeyBoardSize = computed(() => getJourneyBoardSize());
 
 const answerPlaceholder = computed(() => {
   if (currentMode.value === "trouver_le_temps") {
-    return "Ex: present, imparfait, passe compose...";
+    return "Ex : présent, imparfait, passé composé...";
   }
 
   if (currentMode.value === "trouver_infinitif") {
     return "Ex: manger, finir, prendre...";
   }
 
-  return "Tape ta reponse";
+  return "Tape ta réponse";
 });
 
 const answerPersonPrompt = computed(() => {
@@ -450,8 +450,8 @@ onUnmounted(() => {
     <div class="game-stage">
       <section class="card hero">
         <p class="kicker">Les stars de la conjugaison</p>
-        <h1>Entraîne-toi comme un champion</h1>
-        <p class="subtitle">Niveaux CECRL, correction instantanee et progression automatique.</p>
+        <h1>Entraîne-toi et deviens imbattable !</h1>
+        <p class="subtitle">Niveaux CECRL, correction instantanée et progression automatique.</p>
 
         <div class="chapter-summary">
           <div>
@@ -488,14 +488,14 @@ onUnmounted(() => {
 
       <section class="card quiz" v-if="currentQuestion">
         <div class="quiz-main-card">
-          <p class="quiz-badge">Defi en cours</p>
+          <p class="quiz-badge">Défi en cours</p>
           <h2 v-html="currentQuestion.promptHtml ?? currentQuestion.prompt"></h2>
         </div>
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
         <div class="answer-panel">
-          <label class="answer-label" for="answer-input">Ta reponse</label>
+          <label class="answer-label" for="answer-input">Ta réponse</label>
           <p v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</p>
           <div class="answer-row">
             <input
@@ -525,7 +525,7 @@ onUnmounted(() => {
           </div>
 
           <div class="special-keyboard">
-            <span class="special-keyboard-label">Caracteres:</span>
+            <span class="special-keyboard-label">Caractères :</span>
             <button
               v-for="character in specialCharacters"
               :key="character"
@@ -540,12 +540,12 @@ onUnmounted(() => {
 
         <p v-if="feedback" :class="feedback.correct ? 'ok' : 'ko'">
           <template v-if="feedback.correct">Bravo, c'est correct.</template>
-          <template v-else>Incorrect. Reponse attendue: {{ feedback.expected }}</template>
+          <template v-else>Incorrect. Réponse attendue : {{ feedback.expected }}</template>
           <template v-if="feedback.chapterCompleted"> Partie validée: {{ feedback.chapterCompleted }}.</template>
           <template v-if="feedback.nextChapterTitle"> Partie suivante: {{ feedback.nextChapterTitle }}.</template>
-          <template v-if="feedback.promotedTo"> Niveau suivant debloque: {{ feedback.promotedTo }}</template>
+          <template v-if="feedback.promotedTo"> Niveau suivant débloqué: {{ feedback.promotedTo }}</template>
         </p>
-        <p v-if="feedback" class="next-hint">Appuie sur Entree pour la question suivante.</p>
+        <p v-if="feedback" class="next-hint">Appuie sur Entrée pour la question suivante.</p>
         <p v-if="errorMessage" class="ko">{{ errorMessage }}</p>
       </section>
 
