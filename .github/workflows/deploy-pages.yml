@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - gh-pages
-      - main
-      - master
   workflow_dispatch:
 
 permissions:
