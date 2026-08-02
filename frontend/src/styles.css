@@ -392,6 +392,12 @@ button:disabled {
   color: #334155;
 }
 
+.answer-person-prefix {
+  margin: 0 0 8px;
+  font-weight: 800;
+  color: #1e293b;
+}
+
 .answer-input {
   width: 100%;
   color: #0f172a;

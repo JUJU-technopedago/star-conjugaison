@@ -73,6 +73,20 @@ const answerPlaceholder = computed(() => {
   return "Tape ta reponse";
 });
 
+const answerPersonPrompt = computed(() => {
+  const person = currentQuestion.value?.details?.person;
+  if (!person) {
+    return "";
+  }
+
+  const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
+  if (mood.includes("subjonctif")) {
+    return `que ${person}`;
+  }
+
+  return person;
+});
+
 async function focusAnswerField() {
   await nextTick();
 
@@ -482,6 +496,7 @@ onUnmounted(() => {
 
         <div class="answer-panel">
           <label class="answer-label" for="answer-input">Ta reponse</label>
+          <p v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</p>
           <div class="answer-row">
             <input
               id="answer-input"
