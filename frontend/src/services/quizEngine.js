@@ -118,7 +118,7 @@ function formatModeAndTenseForPrompt(mood, tense) {
 function formatModeAndTenseWithArticle(mood, tense) {
   const moodLower = String(mood).toLocaleLowerCase('fr-FR');
   const tenseLower = String(tense).toLocaleLowerCase('fr-FR');
-  const article = moodLower === 'conditionnel' || moodLower === 'subjonctif' ? 'au' : "à l'";
+  const article = moodLower === 'conditionnel' || moodLower === 'subjonctif' ? 'au ' : "à l'";
   return `${article}${moodLower} ${tenseLower}`;
 }
 
