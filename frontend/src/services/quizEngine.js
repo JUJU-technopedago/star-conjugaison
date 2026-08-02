@@ -35,6 +35,7 @@ const ETRE_AUXILIARY_LEMMAS = new Set([
   'tomber',
   'venir'
 ]);
+const DUAL_AUXILIARY_BASE_LEMMAS = ['entrer', 'sortir', 'retourner', 'passer', 'monter', 'descendre'];
 const AUXILIARY_CONJUGATIONS = {
   avoir: {
     present: ['ai', 'as', 'a', 'avons', 'avez', 'ont'],
@@ -114,6 +115,13 @@ function formatModeAndTenseForPrompt(mood, tense) {
   return escapeHtml(`${String(mood).toLocaleLowerCase('fr-FR')} ${String(tense).toLocaleLowerCase('fr-FR')}`);
 }
 
+function formatModeAndTenseWithArticle(mood, tense) {
+  const moodLower = String(mood).toLocaleLowerCase('fr-FR');
+  const tenseLower = String(tense).toLocaleLowerCase('fr-FR');
+  const article = moodLower === 'conditionnel' || moodLower === 'subjonctif' ? 'au' : "à l'";
+  return `${article}${moodLower} ${tenseLower}`;
+}
+
 function formatPersonForPrompt(person) {
   return escapeHtml(String(person));
 }
@@ -153,12 +161,32 @@ function maybeAddAgreementVariants(participle, usesEtre) {
   return Array.from(variants);
 }
 
-function getAuxiliaryKey(lemma) {
+function isReflexiveLemma(normalizedLemma) {
+  return normalizedLemma.startsWith('se ') || normalizedLemma.startsWith("s'");
+}
+
+function isDualAuxiliaryLemma(lemma) {
   const normalizedLemma = normalizeLemma(lemma);
-  if (normalizedLemma.startsWith('se ') || normalizedLemma.startsWith("s'")) {
-    return 'etre';
+  if (isReflexiveLemma(normalizedLemma)) {
+    return false;
   }
-  return ETRE_AUXILIARY_LEMMAS.has(normalizedLemma) ? 'etre' : 'avoir';
+
+  return DUAL_AUXILIARY_BASE_LEMMAS.some((baseLemma) => {
+    return normalizedLemma === baseLemma || normalizedLemma.endsWith(baseLemma);
+  });
+}
+
+function getAuxiliaryKeys(lemma) {
+  const normalizedLemma = normalizeLemma(lemma);
+  if (isReflexiveLemma(normalizedLemma)) {
+    return ['etre'];
+  }
+
+  if (isDualAuxiliaryLemma(normalizedLemma)) {
+    return ['etre', 'avoir'];
+  }
+
+  return ETRE_AUXILIARY_LEMMAS.has(normalizedLemma) ? ['etre'] : ['avoir'];
 }
 
 function getCompoundTenseBase(moodRaw, tenseRaw) {
@@ -171,26 +199,34 @@ function buildExpectedAnswers(selected) {
     return [normalizeSpaces(selected.expected)];
   }
 
-  const auxiliaryKey = getAuxiliaryKey(selected.lemma);
-  const auxiliaryForms = AUXILIARY_CONJUGATIONS[auxiliaryKey]?.[compoundBase];
-  if (!auxiliaryForms) {
-    return [normalizeSpaces(selected.expected)];
-  }
-
-  const auxiliaryForm = auxiliaryForms[selected.personIndex];
-  const participleVariants = maybeAddAgreementVariants(normalizeSpaces(selected.expected), auxiliaryKey === 'etre');
+  const auxiliaryKeys = getAuxiliaryKeys(selected.lemma);
   const subjectVariants = getSubjectVariants(selected.personLabel);
   const answers = new Set();
+  const normalizedParticiple = normalizeSpaces(selected.expected);
 
-  for (const participle of participleVariants) {
-    answers.add(normalizeSpaces(`${auxiliaryForm} ${participle}`));
-    for (const subject of subjectVariants) {
-      if (subject.endsWith("'")) {
-        answers.add(normalizeSpaces(`${subject}${auxiliaryForm} ${participle}`));
-      } else {
-        answers.add(normalizeSpaces(`${subject} ${auxiliaryForm} ${participle}`));
+  for (const auxiliaryKey of auxiliaryKeys) {
+    const auxiliaryForms = AUXILIARY_CONJUGATIONS[auxiliaryKey]?.[compoundBase];
+    if (!auxiliaryForms) {
+      continue;
+    }
+
+    const auxiliaryForm = auxiliaryForms[selected.personIndex];
+    const participleVariants = maybeAddAgreementVariants(normalizedParticiple, auxiliaryKey === 'etre');
+
+    for (const participle of participleVariants) {
+      answers.add(normalizeSpaces(`${auxiliaryForm} ${participle}`));
+      for (const subject of subjectVariants) {
+        if (subject.endsWith("'")) {
+          answers.add(normalizeSpaces(`${subject}${auxiliaryForm} ${participle}`));
+        } else {
+          answers.add(normalizeSpaces(`${subject} ${auxiliaryForm} ${participle}`));
+        }
       }
     }
+  }
+
+  if (answers.size === 0) {
+    return [normalizedParticiple];
   }
 
   return Array.from(answers);
@@ -198,7 +234,7 @@ function buildExpectedAnswers(selected) {
 
 function buildQuestionByMode(mode, selected) {
   const verbPrompt = formatVerbForPrompt(selected.lemma);
-  const moodAndTensePrompt = formatModeAndTenseForPrompt(selected.moodRaw, selected.tenseRaw);
+  const moodAndTenseWithArticle = formatModeAndTenseWithArticle(selected.moodRaw, selected.tenseRaw);
   const personPrompt = formatPersonForPrompt(selected.personLabel);
   const expectedAnswers = buildExpectedAnswers(selected);
 
@@ -218,7 +254,7 @@ function buildQuestionByMode(mode, selected) {
   if (mode === 'trouver_infinitif') {
     return {
       prompt: `Trouve l'infinitif de "${selected.expected}" (${selected.personLabel}, ${selected.moodRaw} ${selected.tenseRaw})`,
-      promptHtml: `Trouve l'infinitif de <strong>"${escapeHtml(selected.expected)}"</strong>, conjugué à <strong>${moodAndTensePrompt}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
+      promptHtml: `Trouve l'infinitif de <strong>"${escapeHtml(selected.expected)}"</strong>, conjugué <strong>${escapeHtml(moodAndTenseWithArticle)}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
       expected: selected.lemma,
       matchStrategy: 'key',
       details: {
@@ -231,8 +267,8 @@ function buildQuestionByMode(mode, selected) {
   }
 
   return {
-    prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" à ${String(selected.moodRaw).toLocaleLowerCase('fr-FR')} ${String(selected.tenseRaw).toLocaleLowerCase('fr-FR')}, à la personne "${selected.personLabel}"`,
-    promptHtml: `Conjugue le verbe <strong>"${verbPrompt}"</strong> à <strong>${moodAndTensePrompt}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
+    prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" ${moodAndTenseWithArticle}, à la personne "${selected.personLabel}"`,
+    promptHtml: `Conjugue le verbe <strong>"${verbPrompt}"</strong> <strong>${escapeHtml(moodAndTenseWithArticle)}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
     expected: expectedAnswers[0],
     acceptedAnswers: expectedAnswers,
     matchStrategy: 'text',
