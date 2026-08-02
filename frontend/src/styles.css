@@ -277,6 +277,52 @@ html {
   align-items: end;
 }
 
+.tense-filter-box {
+  margin-top: 12px;
+  background: linear-gradient(140deg, #eef6ff, #f8fbff);
+  border: 1px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.tense-filter-title {
+  margin: 0;
+  font-weight: 800;
+  color: #1e3a8a;
+}
+
+.tense-filter-subtitle {
+  margin: 4px 0 10px;
+  color: #334155;
+  font-size: 0.92rem;
+}
+
+.tense-filter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 8px;
+}
+
+.tense-filter-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 9px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #dbeafe;
+  font-weight: 600;
+}
+
+.tense-filter-option input {
+  width: 16px;
+  height: 16px;
+}
+
+.tense-filter-option.is-disabled {
+  opacity: 0.62;
+}
+
 label {
   display: grid;
   gap: 6px;
@@ -530,6 +576,10 @@ button:disabled {
 
   .controls {
     gap: 10px;
+  }
+
+  .tense-filter-grid {
+    grid-template-columns: 1fr;
   }
 
   .controls > label {

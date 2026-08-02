@@ -21,6 +21,7 @@ const timeLeft = ref(null);
 const timerId = ref(null);
 const soundEnabled = ref(true);
 const advancingToNext = ref(false);
+const selectedPoolKeysByLevel = ref({});
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -48,6 +49,15 @@ const modeList = computed(() => Object.entries(config.value.modes).length ? Obje
 
 const currentGameNumber = computed(() => clampGameNumber(journey.value.currentGame));
 const currentGameState = computed(() => getGameState(journey.value, currentGameNumber.value) ?? journey.value.gameStates[0]);
+const currentLevelPoolChoices = computed(() => {
+  const pools = config.value.levels?.[currentLevel.value]?.pools ?? [];
+  return pools.map((pool) => ({
+    ...pool,
+    key: buildPoolKey(pool),
+    label: formatPoolLabel(pool)
+  }));
+});
+const isCurrentLevelLockedToSingleTense = computed(() => currentLevel.value === "A1");
 
 const journeyCells = computed(() => journey.value.gameStates.map((game) => ({
   ...game,
@@ -72,6 +82,75 @@ const answerPlaceholder = computed(() => {
 
   return "Tape ta réponse";
 });
+
+function buildPoolKey(pool) {
+  return `${pool.mood}::${pool.tense}`;
+}
+
+function formatPoolLabel(pool) {
+  const mood = String(pool.mood ?? "");
+  const tense = String(pool.tense ?? "");
+  return `${mood.slice(0, 1).toUpperCase()}${mood.slice(1)} ${tense}`;
+}
+
+function initLevelPoolSelection(level) {
+  const pools = config.value.levels?.[level]?.pools ?? [];
+  selectedPoolKeysByLevel.value[level] = pools.map((pool) => buildPoolKey(pool));
+}
+
+function initAllPoolSelections() {
+  for (const level of Object.keys(config.value.levels ?? {})) {
+    initLevelPoolSelection(level);
+  }
+}
+
+function ensureCurrentLevelPoolSelection() {
+  if (!selectedPoolKeysByLevel.value[currentLevel.value]) {
+    initLevelPoolSelection(currentLevel.value);
+  }
+}
+
+function isPoolSelected(poolKey) {
+  const selected = selectedPoolKeysByLevel.value[currentLevel.value] ?? [];
+  return selected.includes(poolKey);
+}
+
+function onPoolToggle(poolKey, event) {
+  if (isCurrentLevelLockedToSingleTense.value) {
+    if (event?.target) {
+      event.target.checked = true;
+    }
+    return;
+  }
+
+  ensureCurrentLevelPoolSelection();
+  const selected = [...(selectedPoolKeysByLevel.value[currentLevel.value] ?? [])];
+  const isChecked = Boolean(event?.target?.checked);
+
+  if (isChecked) {
+    if (!selected.includes(poolKey)) {
+      selected.push(poolKey);
+    }
+    selectedPoolKeysByLevel.value[currentLevel.value] = selected;
+    return;
+  }
+
+  if (selected.length <= 1) {
+    if (event?.target) {
+      event.target.checked = true;
+    }
+    return;
+  }
+
+  selectedPoolKeysByLevel.value[currentLevel.value] = selected.filter((key) => key !== poolKey);
+}
+
+function getCurrentPoolDefinitions() {
+  ensureCurrentLevelPoolSelection();
+  const selectedKeys = new Set(selectedPoolKeysByLevel.value[currentLevel.value] ?? []);
+  const pools = config.value.levels?.[currentLevel.value]?.pools ?? [];
+  return pools.filter((pool) => selectedKeys.has(buildPoolKey(pool)));
+}
 
 const answerPersonPrompt = computed(() => {
   const person = currentQuestion.value?.details?.person;
@@ -206,6 +285,7 @@ function onLevelChange() {
   const chapterLikeGame = currentLevel.value === "A1" ? 1 : currentLevel.value === "A2" ? 21 : currentLevel.value === "B1" ? 41 : currentLevel.value === "B2" ? 81 : 141;
   journey.value.currentGame = chapterLikeGame;
   syncLevelWithGame(chapterLikeGame);
+  ensureCurrentLevelPoolSelection();
   loadQuestion().catch(() => {});
 }
 
@@ -282,7 +362,14 @@ async function loadQuestion() {
   feedback.value = null;
 
   try {
-    const payload = createQuestion(currentLevel.value, currentMode.value);
+    const selectedPoolDefinitions = getCurrentPoolDefinitions();
+    if (selectedPoolDefinitions.length === 0) {
+      throw new Error("Choisis au moins un temps.");
+    }
+
+    const payload = createQuestion(currentLevel.value, currentMode.value, {
+      poolDefinitions: selectedPoolDefinitions
+    });
     if (!payload) {
       throw new Error("Aucune question disponible pour ce niveau.");
     }
@@ -380,6 +467,7 @@ onMounted(async () => {
       modes: getGameModes()
     };
     config.value = payload;
+    initAllPoolSelections();
 
     if (!payload.levels[currentLevel.value]) {
       currentLevel.value = Object.keys(payload.levels)[0] ?? fallbackLevels[0];
@@ -395,9 +483,10 @@ onMounted(async () => {
   } catch (error) {
     errorMessage.value = error.message;
     config.value = {
-      levels: Object.fromEntries(fallbackLevels.map((level) => [level, {}])),
+      levels: getLevelRules(),
       modes: fallbackModes
     };
+    initAllPoolSelections();
   } finally {
     loading.value = false;
   }
@@ -484,6 +573,27 @@ onUnmounted(() => {
             <input v-model="soundEnabled" type="checkbox" />
           </label>
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
+        </div>
+
+        <div class="tense-filter-box">
+          <p class="tense-filter-title">Temps d'entraînement</p>
+          <p class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</p>
+          <div class="tense-filter-grid">
+            <label
+              v-for="pool in currentLevelPoolChoices"
+              :key="pool.key"
+              class="tense-filter-option"
+              :class="{ 'is-disabled': isCurrentLevelLockedToSingleTense }"
+            >
+              <input
+                type="checkbox"
+                :checked="isPoolSelected(pool.key)"
+                :disabled="isCurrentLevelLockedToSingleTense"
+                @change="onPoolToggle(pool.key, $event)"
+              />
+              <span>{{ pool.label }}</span>
+            </label>
+          </div>
         </div>
       </section>
 

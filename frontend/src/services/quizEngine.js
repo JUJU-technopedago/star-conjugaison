@@ -414,7 +414,9 @@ export function createQuestion(level, mode, options = {}) {
   cleanExpiredQuestions();
   const safeLevel = ensureLevel(level);
   const safeMode = ensureMode(mode);
-  const pool = LEVEL_RULES[safeLevel].pools;
+  const configuredPool = Array.isArray(options.poolDefinitions) && options.poolDefinitions.length > 0
+    ? options.poolDefinitions
+    : LEVEL_RULES[safeLevel].pools;
 
   const pickOptions = {
     allowedLemmas: expandGloballyAllowedVerbs()
@@ -425,7 +427,7 @@ export function createQuestion(level, mode, options = {}) {
     pickOptions.priorityWeight = 0.55;
   }
 
-  const selected = pickQuestion(pool, { ...pickOptions, ...options });
+  const selected = pickQuestion(configuredPool, { ...pickOptions, ...options });
   if (!selected) {
     return null;
   }
