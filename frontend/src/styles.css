@@ -340,6 +340,17 @@ button:disabled {
   gap: 10px;
 }
 
+.answer-actions {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: max-content;
+  gap: 8px;
+}
+
+.next-button {
+  background: linear-gradient(135deg, #2563eb, #06b6d4);
+}
+
 .quiz-main-card {
   background: linear-gradient(145deg, #fff7ed, #ffedd5);
   border: 1px solid #fdba74;
@@ -525,7 +536,13 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .answer-row button {
+  .answer-actions {
+    grid-template-columns: 1fr 1fr;
+    grid-auto-flow: row;
+    width: 100%;
+  }
+
+  .answer-actions button {
     width: 100%;
   }
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, onMounted, onUnmounted, ref } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { createQuestion, checkAnswer, computeProgression, getLevelRules, getGameModes } from "./services/quizEngine";
 import { normalizeText } from "./services/normalize";
 import { playFinalWhistle, playTickSound, primeAudio } from "./services/timerAudio";
@@ -73,6 +73,19 @@ const answerPlaceholder = computed(() => {
   return "Tape ta reponse";
 });
 
+async function focusAnswerField() {
+  await nextTick();
+
+  const inputElement = answerInput.value;
+  if (!inputElement) {
+    return;
+  }
+
+  inputElement.focus({ preventScroll: true });
+  const cursorPosition = answer.value.length;
+  inputElement.setSelectionRange(cursorPosition, cursorPosition);
+}
+
 async function goToNextQuestionOnAnyKey() {
   if (!feedback.value || loading.value || advancingToNext.value) {
     return;
@@ -84,6 +97,10 @@ async function goToNextQuestionOnAnyKey() {
   } finally {
     advancingToNext.value = false;
   }
+}
+
+function goToNextQuestion() {
+  goToNextQuestionOnAnyKey().catch(() => {});
 }
 
 function onWindowKeydown(event) {
@@ -265,6 +282,7 @@ async function loadQuestion() {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
+    focusAnswerField().catch(() => {});
   }
 }
 
@@ -472,9 +490,23 @@ onUnmounted(() => {
               v-model="answer"
               type="text"
               :placeholder="answerPlaceholder"
+              autocomplete="off"
+              autocapitalize="none"
+              autocorrect="off"
+              enterkeyhint="done"
               @keyup.enter="onEnterInAnswerField"
             />
-            <button @click="validateAnswer" :disabled="loading">Verifier</button>
+            <div class="answer-actions">
+              <button type="button" @click="validateAnswer" :disabled="loading">Vérifier</button>
+              <button
+                type="button"
+                class="next-button"
+                @click="goToNextQuestion"
+                :disabled="!feedback || loading || advancingToNext"
+              >
+                Suivant
+              </button>
+            </div>
           </div>
 
           <div class="special-keyboard">
