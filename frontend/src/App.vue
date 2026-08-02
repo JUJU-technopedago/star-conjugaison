@@ -1,7 +1,6 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { createQuestion, checkAnswer, computeProgression, getLevelRules, getGameModes } from "./services/quizEngine";
-import { normalizeText } from "./services/normalize";
 import { playFinalWhistle, playTickSound, primeAudio } from "./services/timerAudio";
 import { TOTAL_GAMES, VERBS_PER_GAME, clampGameNumber, createDefaultJourneyProgress, getGameState, getNextGameNumber, getJourneyBoardSize, getJourneyCellLayout } from "./config/journey";
 
@@ -73,7 +72,7 @@ const journeyBoardSize = computed(() => getJourneyBoardSize());
 
 const answerPlaceholder = computed(() => {
   if (currentMode.value === "trouver_le_temps") {
-    return "Ex : présent, imparfait, passé composé...";
+    return "Ex : Présent, Imparfait, Passé composé...";
   }
 
   if (currentMode.value === "trouver_infinitif") {
@@ -82,6 +81,10 @@ const answerPlaceholder = computed(() => {
 
   return "Tape ta réponse";
 });
+
+function normalizeSpaces(value) {
+  return String(value ?? "").trim().replace(/\s+/g, " ");
+}
 
 function buildPoolKey(pool) {
   return `${pool.mood}::${pool.tense}`;
@@ -404,8 +407,8 @@ async function validateAnswer(forceSubmit = false) {
   try {
     const result = checkAnswer(currentQuestion.value.questionId, answer.value);
     const expectedAnswer = currentQuestion.value.expected ?? result.expected ?? "";
-    const normalizedUserAnswer = normalizeText(answer.value);
-    const normalizedExpectedAnswer = normalizeText(expectedAnswer);
+    const normalizedUserAnswer = normalizeSpaces(answer.value);
+    const normalizedExpectedAnswer = normalizeSpaces(expectedAnswer);
 
     feedback.value = {
       ...result,
@@ -607,6 +610,7 @@ onUnmounted(() => {
 
         <div class="answer-panel">
           <label class="answer-label" for="answer-input">Ta réponse</label>
+          <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
           <p v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</p>
           <div class="answer-row">
             <input

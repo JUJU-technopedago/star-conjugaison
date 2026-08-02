@@ -1,7 +1,7 @@
 import { LEVEL_RULES } from '../config/cecrl.js';
 import { A1_PRIORITY_IRREGULARS } from '../config/a1Verbs.js';
 import { GLOBAL_ALLOWED_VERBS } from '../config/allowedVerbs.js';
-import { normalizeKey, normalizeText } from './normalize.js';
+import { normalizeKey } from './normalize.js';
 import verbs from './verbesData.js';
 
 const QUESTION_TTL_MS = 1000 * 60 * 10;
@@ -40,19 +40,19 @@ const AUXILIARY_CONJUGATIONS = {
   avoir: {
     present: ['ai', 'as', 'a', 'avons', 'avez', 'ont'],
     imparfait: ['avais', 'avais', 'avait', 'avions', 'aviez', 'avaient'],
-    passeSimple: ['eus', 'eus', 'eut', 'eumes', 'eutes', 'eurent'],
+    passeSimple: ['eus', 'eus', 'eut', 'eûmes', 'eûtes', 'eurent'],
     futurSimple: ['aurai', 'auras', 'aura', 'aurons', 'aurez', 'auront'],
     subjonctifPresent: ['aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'],
-    subjonctifImparfait: ['eusse', 'eusses', 'eut', 'eussions', 'eussiez', 'eussent'],
+    subjonctifImparfait: ['eusse', 'eusses', 'eût', 'eussions', 'eussiez', 'eussent'],
     conditionnelPresent: ['aurais', 'aurais', 'aurait', 'aurions', 'auriez', 'auraient']
   },
   etre: {
-    present: ['suis', 'es', 'est', 'sommes', 'etes', 'sont'],
-    imparfait: ['etais', 'etais', 'etait', 'etions', 'etiez', 'etaient'],
-    passeSimple: ['fus', 'fus', 'fut', 'fumes', 'futes', 'furent'],
+    present: ['suis', 'es', 'est', 'sommes', 'êtes', 'sont'],
+    imparfait: ['étais', 'étais', 'était', 'étions', 'étiez', 'étaient'],
+    passeSimple: ['fus', 'fus', 'fut', 'fûmes', 'fûtes', 'furent'],
     futurSimple: ['serai', 'seras', 'sera', 'serons', 'serez', 'seront'],
     subjonctifPresent: ['sois', 'sois', 'soit', 'soyons', 'soyez', 'soient'],
-    subjonctifImparfait: ['fusse', 'fusses', 'fut', 'fussions', 'fussiez', 'fussent'],
+    subjonctifImparfait: ['fusse', 'fusses', 'fût', 'fussions', 'fussiez', 'fussent'],
     conditionnelPresent: ['serais', 'serais', 'serait', 'serions', 'seriez', 'seraient']
   }
 };
@@ -285,10 +285,13 @@ function isAnswerCorrect(expected, answer, strategy) {
     return expected.some((candidate) => isAnswerCorrect(candidate, answer, strategy));
   }
 
+  const cleanExpected = normalizeSpaces(expected);
+  const cleanAnswer = normalizeSpaces(answer);
+
   if (strategy === 'key') {
-    return normalizeKey(expected) === normalizeKey(answer);
+    return cleanExpected === cleanAnswer;
   }
-  return normalizeText(expected) === normalizeText(answer);
+  return cleanExpected === cleanAnswer;
 }
 
 function cleanExpiredQuestions() {

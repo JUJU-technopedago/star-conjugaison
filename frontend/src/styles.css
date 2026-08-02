@@ -450,6 +450,13 @@ button:disabled {
   color: #334155;
 }
 
+.answer-strict-hint {
+  margin: 0 0 8px;
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: #475569;
+}
+
 .answer-person-prefix {
   margin: 0 0 8px;
   font-weight: 800;
