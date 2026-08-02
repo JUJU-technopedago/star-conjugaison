@@ -16,6 +16,55 @@ const GAME_MODES = {
 };
 
 const PERSON_LABELS = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
+const ETRE_AUXILIARY_LEMMAS = new Set([
+  'aller',
+  'arriver',
+  'descendre',
+  'devenir',
+  'entrer',
+  'monter',
+  'mourir',
+  'naître',
+  'partir',
+  'passer',
+  'rentrer',
+  'rester',
+  'retourner',
+  'revenir',
+  'sortir',
+  'tomber',
+  'venir'
+]);
+const AUXILIARY_CONJUGATIONS = {
+  avoir: {
+    present: ['ai', 'as', 'a', 'avons', 'avez', 'ont'],
+    imparfait: ['avais', 'avais', 'avait', 'avions', 'aviez', 'avaient'],
+    passeSimple: ['eus', 'eus', 'eut', 'eumes', 'eutes', 'eurent'],
+    futurSimple: ['aurai', 'auras', 'aura', 'aurons', 'aurez', 'auront'],
+    subjonctifPresent: ['aie', 'aies', 'ait', 'ayons', 'ayez', 'aient'],
+    subjonctifImparfait: ['eusse', 'eusses', 'eut', 'eussions', 'eussiez', 'eussent'],
+    conditionnelPresent: ['aurais', 'aurais', 'aurait', 'aurions', 'auriez', 'auraient']
+  },
+  etre: {
+    present: ['suis', 'es', 'est', 'sommes', 'etes', 'sont'],
+    imparfait: ['etais', 'etais', 'etait', 'etions', 'etiez', 'etaient'],
+    passeSimple: ['fus', 'fus', 'fut', 'fumes', 'futes', 'furent'],
+    futurSimple: ['serai', 'seras', 'sera', 'serons', 'serez', 'seront'],
+    subjonctifPresent: ['sois', 'sois', 'soit', 'soyons', 'soyez', 'soient'],
+    subjonctifImparfait: ['fusse', 'fusses', 'fut', 'fussions', 'fussiez', 'fussent'],
+    conditionnelPresent: ['serais', 'serais', 'serait', 'serions', 'seriez', 'seraient']
+  }
+};
+const COMPOUND_TENSE_BASES = {
+  'indicatif:passe compose': 'present',
+  'indicatif:plus que parfait': 'imparfait',
+  'indicatif:passe anterieur': 'passeSimple',
+  'indicatif:futur anterieur': 'futurSimple',
+  'subjonctif:passe': 'subjonctifPresent',
+  'subjonctif:plus que parfait': 'subjonctifImparfait',
+  'conditionnel:passe 1ere forme': 'conditionnelPresent',
+  'conditionnel:passe 2eme forme': 'subjonctifImparfait'
+};
 
 function ensureLevel(level) {
   return LEVEL_RULES[level] ? level : 'A1';
@@ -69,10 +118,89 @@ function formatPersonForPrompt(person) {
   return escapeHtml(String(person));
 }
 
+function getSubjectVariants(personLabel) {
+  switch (personLabel) {
+    case 'je':
+      return ['je', "j'"];
+    case 'tu':
+    case 'nous':
+    case 'vous':
+      return [personLabel];
+    case 'il/elle':
+      return ['il', 'elle', 'on'];
+    case 'ils/elles':
+      return ['ils', 'elles'];
+    default:
+      return [];
+  }
+}
+
+function normalizeSpaces(value) {
+  return String(value).trim().replace(/\s+/g, ' ');
+}
+
+function maybeAddAgreementVariants(participle, usesEtre) {
+  if (!usesEtre) {
+    return [participle];
+  }
+
+  const variants = new Set([participle]);
+  if (!/[sx]$/i.test(participle)) {
+    variants.add(`${participle}e`);
+    variants.add(`${participle}s`);
+    variants.add(`${participle}es`);
+  }
+  return Array.from(variants);
+}
+
+function getAuxiliaryKey(lemma) {
+  const normalizedLemma = normalizeLemma(lemma);
+  if (normalizedLemma.startsWith('se ') || normalizedLemma.startsWith("s'")) {
+    return 'etre';
+  }
+  return ETRE_AUXILIARY_LEMMAS.has(normalizedLemma) ? 'etre' : 'avoir';
+}
+
+function getCompoundTenseBase(moodRaw, tenseRaw) {
+  return COMPOUND_TENSE_BASES[`${normalizeKey(moodRaw)}:${normalizeKey(tenseRaw)}`] ?? null;
+}
+
+function buildExpectedAnswers(selected) {
+  const compoundBase = getCompoundTenseBase(selected.moodRaw, selected.tenseRaw);
+  if (!compoundBase) {
+    return [normalizeSpaces(selected.expected)];
+  }
+
+  const auxiliaryKey = getAuxiliaryKey(selected.lemma);
+  const auxiliaryForms = AUXILIARY_CONJUGATIONS[auxiliaryKey]?.[compoundBase];
+  if (!auxiliaryForms) {
+    return [normalizeSpaces(selected.expected)];
+  }
+
+  const auxiliaryForm = auxiliaryForms[selected.personIndex];
+  const participleVariants = maybeAddAgreementVariants(normalizeSpaces(selected.expected), auxiliaryKey === 'etre');
+  const subjectVariants = getSubjectVariants(selected.personLabel);
+  const answers = new Set();
+
+  for (const participle of participleVariants) {
+    answers.add(normalizeSpaces(`${auxiliaryForm} ${participle}`));
+    for (const subject of subjectVariants) {
+      if (subject.endsWith("'")) {
+        answers.add(normalizeSpaces(`${subject}${auxiliaryForm} ${participle}`));
+      } else {
+        answers.add(normalizeSpaces(`${subject} ${auxiliaryForm} ${participle}`));
+      }
+    }
+  }
+
+  return Array.from(answers);
+}
+
 function buildQuestionByMode(mode, selected) {
   const verbPrompt = formatVerbForPrompt(selected.lemma);
   const moodAndTensePrompt = formatModeAndTenseForPrompt(selected.moodRaw, selected.tenseRaw);
   const personPrompt = formatPersonForPrompt(selected.personLabel);
+  const expectedAnswers = buildExpectedAnswers(selected);
 
   if (mode === 'trouver_le_temps') {
     return {
@@ -105,7 +233,8 @@ function buildQuestionByMode(mode, selected) {
   return {
     prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" à ${String(selected.moodRaw).toLocaleLowerCase('fr-FR')} ${String(selected.tenseRaw).toLocaleLowerCase('fr-FR')}, à la personne "${selected.personLabel}"`,
     promptHtml: `Conjugue le verbe <strong>"${verbPrompt}"</strong> à <strong>${moodAndTensePrompt}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
-    expected: selected.expected,
+    expected: expectedAnswers[0],
+    acceptedAnswers: expectedAnswers,
     matchStrategy: 'text',
     details: {
       person: selected.personLabel,
@@ -116,6 +245,10 @@ function buildQuestionByMode(mode, selected) {
 }
 
 function isAnswerCorrect(expected, answer, strategy) {
+  if (Array.isArray(expected)) {
+    return expected.some((candidate) => isAnswerCorrect(candidate, answer, strategy));
+  }
+
   if (strategy === 'key') {
     return normalizeKey(expected) === normalizeKey(answer);
   }
@@ -266,7 +399,8 @@ export function createQuestion(level, mode, options = {}) {
 
   questionStore.set(questionId, {
     createdAt: Date.now(),
-    expected: modeQuestion.expected,
+    expected: modeQuestion.acceptedAnswers ?? modeQuestion.expected,
+    displayExpected: modeQuestion.expected,
     level: safeLevel,
     mode: safeMode,
     matchStrategy: modeQuestion.matchStrategy
@@ -297,7 +431,7 @@ export function checkAnswer(questionId, answer) {
   questionStore.delete(questionId);
   return {
     correct: isAnswerCorrect(snapshot.expected, answer, snapshot.matchStrategy),
-    expected: snapshot.expected,
+    expected: snapshot.displayExpected ?? (Array.isArray(snapshot.expected) ? snapshot.expected[0] : snapshot.expected),
     answer: typeof answer === 'string' ? answer : '',
     level: snapshot.level,
     mode: snapshot.mode

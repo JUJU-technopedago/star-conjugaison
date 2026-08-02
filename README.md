@@ -7,7 +7,7 @@ Application de quiz de conjugaison française, livrée en version statique pour 
 1. Pousser cette branche sur GitHub.
 2. Dans GitHub, ouvrir les paramètres du dépôt.
 3. Dans Pages, choisir la branche `gh-pages` et le dossier `/root`.
-4. Le site sera disponible sur `https://juju-technopedago.github.io/conjugaison/`.
+4. Le site sera disponible sur `https://juju-technopedago.github.io/star-conjugaison/`.
 
 ## Développement local
 

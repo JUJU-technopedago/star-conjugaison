@@ -21,3 +21,23 @@ test('normalizeText matches a straightforward mobile-style answer', () => {
   assert.equal(normalizeText('parles'), normalizeText('parles'));
   assert.equal(normalizeText(' Parles '), normalizeText('parles'));
 });
+
+test('compound tense accepts the auxiliary plus participle', () => {
+  let question = null;
+
+  for (let index = 0; index < 5000; index += 1) {
+    const candidate = createQuestion('B1', 'trouver_conjugaison');
+    if (candidate.lemma === 'finir' && candidate.person === 'je' && candidate.tense === 'Passé composé') {
+      question = candidate;
+      break;
+    }
+
+    checkAnswer(candidate.questionId, '__discard__');
+  }
+
+  assert.ok(question);
+  assert.equal(question.expected, 'ai fini');
+
+  const result = checkAnswer(question.questionId, 'ai fini');
+  assert.equal(result.correct, true);
+});
