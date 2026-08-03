@@ -164,14 +164,16 @@ const answerPersonPrompt = computed(() => {
   const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
   const label = mood.includes("subjonctif") ? `que ${person}` : person;
 
-  // Use elided form when the conjugated answer starts with a vowel or mute h
+  // Check all accepted answers to find one starting with a vowel
   if (currentQuestion.value?.matchStrategy === "text") {
-    const expected = currentQuestion.value?.expected ?? "";
-    if (label === "je" && /^[aeiouhàâäéèêëîïôöùûü]/i.test(expected)) {
-      return "j'";
-    }
-    if (label === "que je" && /^[aeiouhàâäéèêëîïôöùûü]/i.test(expected)) {
-      return "que j'";
+    const acceptedAnswers = currentQuestion.value?.acceptedAnswers ?? [];
+    for (const answer of acceptedAnswers) {
+      const firstWord = answer.split(" ")[0];
+      if (/^[aeiouhàâäéèêëîïôöùûü]/i.test(firstWord)) {
+        if (label === "je") return "j'";
+        if (label === "que je") return "que j'";
+        break;
+      }
     }
   }
 
