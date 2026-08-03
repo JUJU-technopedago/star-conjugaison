@@ -1,3 +1,27 @@
+// B1 = Intermédiaire
+// Organisé par groupe verbal : pronominaux, 1er groupe, 2e groupe, 3e groupe
+
+export const B1_PRONOMINAL = [
+  "se plaindre", "se souvenir", "s'inquiéter", "se décider", "s'améliorer", "se tromper",
+  "s'endormir", "s'apercevoir", "se dépêcher", "se rencontrer", "s'échapper", "se succéder",
+  "se manquer", "se mentir", "se promettre"
+];
+
+export const B1_GROUP1 = [
+  "améliorer", "accélérer", "approcher", "compliquer", "considérer", "découvrir", "déranger",
+  "développer", "engager", "enregistrer", "entraîner", "expliquer", "exprimer", "fabriquer", "fonctionner"
+];
+
+export const B1_GROUP2 = [
+  "abolir", "accomplir", "acquérir", "admettre", "affirmer", "agir", "approuver", "assurer",
+  "bannir", "bâtir", "chérir", "commettre", "comparaître", "définir", "demurer"
+];
+
+export const B1_GROUP3 = [
+  "accueillir", "acquérir", "apparaître", "apprendre", "atteindre", "attendre", "avoir", "battre",
+  "boire", "bouillir", "conclure", "concourir", "conduire", "confondre", "conquérir"
+];
+
 export const B1_ESSENTIAL_VERBS = [
   "se souvenir",
   "s'inquiéter",

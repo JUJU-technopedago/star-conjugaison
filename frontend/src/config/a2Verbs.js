@@ -1,3 +1,27 @@
+// A2 = Élémentaire
+// Organisé par groupe verbal : pronominaux, 1er groupe, 2e groupe, 3e groupe
+
+export const A2_PRONOMINAL = [
+  "s'arrêter", "s'intéresser", "se souvenir", "s'inquiéter", "se décider", "s'endormir",
+  "s'apercevoir", "se concentrer", "s'adapter", "se douter", "se reposer", "se promener",
+  "se regarder", "se rencontrer", "se parler"
+];
+
+export const A2_GROUP1 = [
+  "continuer", "commencer", "comparer", "utiliser", "examiner", "préférer", "passer",
+  "laisser", "fermer", "ouvrir", "décider", "essayer", "préparer", "suggérer", "transformer"
+];
+
+export const A2_GROUP2 = [
+  "unir", "punir", "bâtir", "guérir", "éblouir", "élargir", "maigrir", "pâlir",
+  "garantir", "agir", "affranchir", "accomplir", "embellir", "enrichir", "fleurir"
+];
+
+export const A2_GROUP3 = [
+  "pouvoir", "vouloir", "devoir", "savoir", "croire", "connaître", "mener", "tenir",
+  "suivre", "servir", "recevoir", "permettre", "produire", "traduire", "conduire"
+];
+
 export const A2_ESSENTIAL_VERBS = [
   "mettre",
   "apprendre",

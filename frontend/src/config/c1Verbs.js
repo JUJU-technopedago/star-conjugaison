@@ -1,3 +1,27 @@
+// C1 = Avancé
+// Organisé par groupe verbal : pronominaux, 1er groupe, 2e groupe, 3e groupe
+
+export const C1_PRONOMINAL = [
+  "s'exprimer", "se reproduire", "se douter", "se contredire", "s'abstraire", "s'accaparer",
+  "s'accorder", "s'accréditer", "s'activer", "s'adapter", "s'adjoindre", "s'adonner",
+  "s'affronter", "s'agglutiner", "s'amplifier"
+];
+
+export const C1_GROUP1 = [
+  "abolir", "abonder", "aboutir", "abraser", "abréger", "abreuver", "abriter", "abroger",
+  "absenter", "absorber", "abstenir", "abstraire", "abuser", "accabler", "accalmie"
+];
+
+export const C1_GROUP2 = [
+  "abolition", "abomination", "abominablement", "abominateur", "abominable", "abominer", "abondamment",
+  "abondance", "abonder", "abornement", "abouté", "aboutée", "aboutement", "abouter", "aboutir"
+];
+
+export const C1_GROUP3 = [
+  "absconse", "abscondre", "abscisse", "abscondit", "abscondu", "absconsus", "abseille", "absence",
+  "absentéisme", "absentement", "absentéer", "absentément", "absentia", "absentiement", "absentz"
+];
+
 export const C1_ESSENTIAL_VERBS = [
   "s'exprimer",
   "se reproduire",

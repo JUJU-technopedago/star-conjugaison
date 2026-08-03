@@ -1,3 +1,27 @@
+// B2 = Intermédiaire supérieur
+// Organisé par groupe verbal : pronominaux, 1er groupe, 2e groupe, 3e groupe
+
+export const B2_PRONOMINAL = [
+  "se concentrer", "se comporter", "s'étonner", "s'adapter", "se manifester", "se reproduire",
+  "se contredire", "se dérouler", "s'développer", "se dissoudre", "s'évanouir", "se méfier",
+  "s'évader", "se perdre", "se repentir"
+];
+
+export const B2_GROUP1 = [
+  "accumuler", "affranchir", "affirmer", "aggraver", "agir", "amasser", "aménager", "amender",
+  "amplifier", "amuser", "analyser", "anéantir", "animer", "annuler", "anticiper"
+];
+
+export const B2_GROUP2 = [
+  "aboutir", "accabler", "accorder", "accroître", "accumuler", "acquérir", "acquitter", "adresser",
+  "adjoindre", "adjurer", "admirer", "admettre", "administrer", "adopter", "adorer"
+];
+
+export const B2_GROUP3 = [
+  "abattre", "abolir", "abonder", "aboutir", "accabler", "accaparer", "accéder", "accélérer",
+  "accentuer", "accepter", "accident", "accidentel", "acclimater", "accommoder", "accompagner"
+];
+
 export const B2_ESSENTIAL_VERBS = [
   "se concentrer",
   "se comporter",
