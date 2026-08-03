@@ -36,6 +36,27 @@ const ETRE_AUXILIARY_LEMMAS = new Set([
   'venir'
 ]);
 const DUAL_AUXILIARY_BASE_LEMMAS = ['entrer', 'sortir', 'retourner', 'passer', 'monter', 'descendre'];
+
+// Reflexive verbs with indirect object (COI) - participle does NOT agree
+const REFLEXIVE_COI_LEMMAS = new Set([
+  'se demander',    // demander À (soi)
+  's\'intéresser',  // s'intéresser À
+  'se souvenir',    // se souvenir DE
+  's\'inquiéter',   // s'inquiéter DE
+  'se décider',     // se décider À
+  'se tromper',     // se tromper DE
+  's\'apercevoir',  // s'apercevoir DE
+  'se plaindre',    // se plaindre DE
+  'se concentrer',  // se concentrer SUR
+  's\'étonner',     // s'étonner DE
+  's\'adapter',     // s'adapter À
+  'se douter',      // se douter DE
+  'se téléphoner',  // téléphoner À
+  'se parler',      // parler À
+  'se sourire',     // sourire À
+  'se nuire'        // nuire À
+]);
+
 const AUXILIARY_CONJUGATIONS = {
   avoir: {
     present: ['ai', 'as', 'a', 'avons', 'avez', 'ont'],
@@ -147,8 +168,14 @@ function normalizeSpaces(value) {
   return String(value).trim().replace(/\s+/g, ' ');
 }
 
-function maybeAddAgreementVariants(participle, usesEtre) {
-  if (!usesEtre) {
+function isReflexiveCOI(lemma) {
+  const normalizedLemma = normalizeLemma(lemma);
+  return REFLEXIVE_COI_LEMMAS.has(normalizedLemma);
+}
+
+function maybeAddAgreementVariants(participle, usesEtre, isReflexiveCOI = false) {
+  // Reflexive verbs with indirect object don't have participle agreement
+  if (!usesEtre || isReflexiveCOI) {
     return [participle];
   }
 
@@ -218,7 +245,11 @@ function buildExpectedAnswers(selected) {
     }
 
     const auxiliaryForm = auxiliaryForms[selected.personIndex];
-    const participleVariants = maybeAddAgreementVariants(normalizedParticiple, auxiliaryKey === 'etre');
+    const participleVariants = maybeAddAgreementVariants(
+      normalizedParticiple,
+      auxiliaryKey === 'etre',
+      isReflexiveCOI(selected.lemma)
+    );
 
     for (const participle of participleVariants) {
       answers.add(normalizeSpaces(`${auxiliaryForm} ${participle}`));
