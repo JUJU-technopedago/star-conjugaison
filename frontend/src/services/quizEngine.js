@@ -154,9 +154,16 @@ function maybeAddAgreementVariants(participle, usesEtre) {
 
   const variants = new Set([participle]);
   if (!/[sx]$/i.test(participle)) {
+    // Masculine singular: generate all four agreement forms
     variants.add(`${participle}e`);
     variants.add(`${participle}s`);
     variants.add(`${participle}es`);
+  } else if (/[^sx]s$/i.test(participle)) {
+    // Masculine plural (e.g. "venus"): derive the singular base and add missing feminine forms
+    const base = participle.slice(0, -1);
+    variants.add(base);
+    variants.add(`${base}e`);
+    variants.add(`${base}es`);
   }
   return Array.from(variants);
 }
