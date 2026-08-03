@@ -162,34 +162,21 @@ const answerPersonPrompt = computed(() => {
   }
 
   const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
-  const label = mood.includes("subjonctif") ? `que ${person}` : person;
+  const base = mood.includes("subjonctif") ? `que ${person}` : person;
 
-  if (currentQuestion.value?.matchStrategy === "text") {
-    // Collect all candidate answers
-    const candidates = [
-      currentQuestion.value?.expected,
-      ...(currentQuestion.value?.acceptedAnswers ?? [])
-    ].filter(Boolean);
+  // Check if person is "je" or part of "que je"
+  if (person === "je") {
+    // Get first character of first accepted answer
+    const answer = currentQuestion.value?.expected || currentQuestion.value?.acceptedAnswers?.[0] || "";
+    const firstChar = String(answer).trim()[0]?.toLowerCase() || "";
     
-    // Check if any answer starts with a vowel (skip leading pronouns)
-    for (const answer of candidates) {
-      const trimmed = String(answer).trim();
-      const words = trimmed.split(/\s+/);
-      
-      // Find first word that isn't a subject pronoun
-      for (const word of words) {
-        if (!/^(je|tu|il|elle|on|nous|vous|ils|elles|j')$/i.test(word)) {
-          // This is the conjugated verb (or first non-pronoun word)
-          if (/^[aeiouhàâäéèêëîïôöùûü]/i.test(word)) {
-            return label === "je" ? "j'" : label === "que je" ? "que j'" : label;
-          }
-          break; // Stop after first non-pronoun word
-        }
-      }
+    // If answer starts with vowel, use elided form
+    if (/[aeiouhàâäéèêëîïôöùûü]/.test(firstChar)) {
+      return mood.includes("subjonctif") ? "que j'" : "j'";
     }
   }
 
-  return label;
+  return base;
 });
 
 async function focusAnswerField() {
