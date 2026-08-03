@@ -38,23 +38,25 @@ const ETRE_AUXILIARY_LEMMAS = new Set([
 const DUAL_AUXILIARY_BASE_LEMMAS = ['entrer', 'sortir', 'retourner', 'passer', 'monter', 'descendre'];
 
 // Reflexive verbs with indirect object (COI) - participle does NOT agree
+// These verbs take "à l'autre" (e.g., parler à, téléphoner à)
 const REFLEXIVE_COI_LEMMAS = new Set([
-  'se demander',    // demander À (soi)
-  's\'intéresser',  // s'intéresser À
-  'se souvenir',    // se souvenir DE
-  's\'inquiéter',   // s'inquiéter DE
-  'se décider',     // se décider À
-  'se tromper',     // se tromper DE
-  's\'apercevoir',  // s'apercevoir DE
-  'se plaindre',    // se plaindre DE
-  'se concentrer',  // se concentrer SUR
-  's\'étonner',     // s'étonner DE
-  's\'adapter',     // s'adapter À
-  'se douter',      // se douter DE
-  'se téléphoner',  // téléphoner À
-  'se parler',      // parler À
-  'se sourire',     // sourire À
-  'se nuire'        // nuire À
+  'se parler',       // parler l'un à l'autre
+  'se téléphoner',   // téléphoner à l'autre
+  'se sourire',      // sourire à l'autre
+  'se plaire',       // être agréable l'un à l'autre
+  'se dépaire',      // ne pas être agréables l'un à l'autre
+  'se ressembler',   // être semblables
+  'se nuire',        // causer du tort à l'autre
+  'se convenir',     // convenir à l'autre
+  'se succéder',     // venir l'un après l'autre
+  'se manquer',      // manquer à l'autre
+  'se mentir',       // mentir à l'autre
+  'se promettre',    // promettre à l'autre
+  'se permettre',    // permettre à l'autre
+  'se dire',         // dire à l'autre
+  'se raconter',     // raconter à l'autre
+  's\'écrire',       // écrire à l'autre
+  'se répondre'      // répondre à l'autre
 ]);
 
 const AUXILIARY_CONJUGATIONS = {
