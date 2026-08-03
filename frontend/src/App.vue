@@ -162,11 +162,20 @@ const answerPersonPrompt = computed(() => {
   }
 
   const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
-  if (mood.includes("subjonctif")) {
-    return `que ${person}`;
+  const label = mood.includes("subjonctif") ? `que ${person}` : person;
+
+  // Use elided form when the conjugated answer starts with a vowel or mute h
+  if (currentQuestion.value?.matchStrategy === "text") {
+    const expected = currentQuestion.value?.expected ?? "";
+    if (label === "je" && /^[aeiouhàâäéèêëîïôöùûü]/i.test(expected)) {
+      return "j'";
+    }
+    if (label === "que je" && /^[aeiouhàâäéèêëîïôöùûü]/i.test(expected)) {
+      return "que j'";
+    }
   }
 
-  return person;
+  return label;
 });
 
 async function focusAnswerField() {
@@ -611,8 +620,7 @@ onUnmounted(() => {
         <div class="answer-panel">
           <label class="answer-label" for="answer-input">Ta réponse</label>
           <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
-          <p v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</p>
-          <div class="answer-row">
+          <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <input
               id="answer-input"
               class="answer-input"

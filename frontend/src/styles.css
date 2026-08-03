@@ -396,6 +396,11 @@ button:disabled {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
+  align-items: center;
+}
+
+.answer-row--with-person {
+  grid-template-columns: auto 1fr auto;
 }
 
 .answer-actions {
@@ -458,9 +463,11 @@ button:disabled {
 }
 
 .answer-person-prefix {
-  margin: 0 0 8px;
+  margin: 0;
   font-weight: 800;
   color: #1e293b;
+  white-space: nowrap;
+  align-self: center;
 }
 
 .answer-input {
@@ -615,6 +622,14 @@ button:disabled {
 
   .answer-row {
     grid-template-columns: 1fr;
+  }
+
+  .answer-row--with-person {
+    grid-template-columns: auto 1fr;
+  }
+
+  .answer-row--with-person .answer-actions {
+    grid-column: 1 / -1;
   }
 
   .answer-actions {
