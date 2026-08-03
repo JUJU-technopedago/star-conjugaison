@@ -164,15 +164,25 @@ const answerPersonPrompt = computed(() => {
   const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
   const label = mood.includes("subjonctif") ? `que ${person}` : person;
 
-  // Check all accepted answers to find one starting with a vowel
   if (currentQuestion.value?.matchStrategy === "text") {
-    const acceptedAnswers = currentQuestion.value?.acceptedAnswers ?? [];
-    for (const answer of acceptedAnswers) {
-      const firstWord = answer.split(" ")[0];
-      if (/^[aeiouhàâäéèêëîïôöùûü]/i.test(firstWord)) {
-        if (label === "je") return "j'";
-        if (label === "que je") return "que j'";
-        break;
+    const allAnswers = [
+      ...(currentQuestion.value?.acceptedAnswers ?? []),
+      currentQuestion.value?.expected ?? ""
+    ].filter(Boolean);
+    
+    for (const answer of allAnswers) {
+      // Extract the first word (skip subject pronouns if present)
+      const words = answer.split(/\s+/).filter(w => w);
+      for (const word of words) {
+        // Skip if it's a known subject pronoun
+        if (/^(je|tu|il|elle|on|nous|vous|ils|elles|j')$/i.test(word)) continue;
+        // Test if word starts with vowel
+        if (/^[aeiouhàâäéèêëîïôöùûü]/i.test(word)) {
+          if (label === "je") return "j'";
+          if (label === "que je") return "que j'";
+          return label;
+        }
+        break; // Only check first non-pronoun word
       }
     }
   }
