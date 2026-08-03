@@ -621,6 +621,7 @@ onUnmounted(() => {
           <label class="answer-label" for="answer-input">Ta réponse</label>
           <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
+            <span v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</span>
             <input
               id="answer-input"
               class="answer-input"
