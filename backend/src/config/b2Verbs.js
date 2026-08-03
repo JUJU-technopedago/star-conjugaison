@@ -1,4 +1,9 @@
 export const B2_ESSENTIAL_VERBS = [
+  "se concentrer",
+  "se comporter",
+  "s'étonner",
+  "s'adapter",
+  "se manifester",
   "affirmer",
   "prétendre",
   "soutenir",

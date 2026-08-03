@@ -1,4 +1,7 @@
 export const C1_ESSENTIAL_VERBS = [
+  "s'exprimer",
+  "se reproduire",
+  "se douter",
   "approuver",
   "désapprouver",
   "réfuter",
