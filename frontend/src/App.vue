@@ -306,6 +306,27 @@ async function focusAnswerField() {
   inputElement.setSelectionRange(cursorPosition, cursorPosition);
 }
 
+function shouldHideKeyboardOnScroll() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+
+function onWindowScroll() {
+  if (!shouldHideKeyboardOnScroll()) {
+    return;
+  }
+
+  const inputElement = answerInput.value;
+  if (!inputElement || document.activeElement !== inputElement) {
+    return;
+  }
+
+  inputElement.blur();
+}
+
 async function goToNextQuestionOnAnyKey() {
   if (!feedback.value || loading.value || advancingToNext.value) {
     return;
@@ -591,6 +612,7 @@ async function validateAnswer(forceSubmit = false) {
 onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
+  window.addEventListener("scroll", onWindowScroll, { passive: true });
   loadJourneyProgress();
 
   try {
@@ -626,6 +648,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
+  window.removeEventListener("scroll", onWindowScroll);
   stopTimer();
 });
 </script>
