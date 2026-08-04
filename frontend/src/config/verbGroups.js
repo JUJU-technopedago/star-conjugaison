@@ -83,7 +83,7 @@ export function normalizeSelectedVerbGroups(groups) {
 }
 
 export const VERB_GROUP_CHOICES = [
-  { key: 'group1', label: 'Groupe 1 (-er)' },
-  { key: 'group2', label: 'Groupe 2 (-ir regulier)' },
-  { key: 'group3', label: 'Groupe 3 (irreguliers)' }
+  { key: 'group1', label: '1<sup>er</sup> groupe (-ER)' },
+  { key: 'group2', label: '2<sup>ème</sup> groupe (-IR régulier)' },
+  { key: 'group3', label: '3<sup>ème</sup> groupe (irréguliers)' }
 ];

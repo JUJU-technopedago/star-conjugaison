@@ -631,7 +631,7 @@ onUnmounted(() => {
                 :checked="isVerbGroupSelected(choice.key)"
                 @change="onVerbGroupToggle(choice.key, $event)"
               />
-              <span>{{ choice.label }}</span>
+              <span v-html="choice.label"></span>
             </label>
           </div>
         </div>
