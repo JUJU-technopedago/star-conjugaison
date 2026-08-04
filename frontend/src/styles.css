@@ -11,6 +11,12 @@
   color-scheme: light;
 }
 
+html,
+body,
+#app {
+  min-width: 320px;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -23,6 +29,7 @@ body {
     radial-gradient(circle at 85% 15%, #ffe8a3, transparent 42%),
     linear-gradient(135deg, var(--bg-a), #fff8ef);
   min-height: 100vh;
+  overflow-x: hidden;
 }
 
 html {
@@ -30,14 +37,15 @@ html {
 }
 
 .page {
+  width: min(100%, 1280px);
   max-width: 1280px;
   margin: 0 auto;
-  padding: 24px;
-  padding-left: max(24px, env(safe-area-inset-left));
-  padding-right: max(24px, env(safe-area-inset-right));
-  padding-bottom: max(24px, env(safe-area-inset-bottom));
+  padding: clamp(14px, 2vw, 24px);
+  padding-left: max(clamp(14px, 2vw, 24px), env(safe-area-inset-left));
+  padding-right: max(clamp(14px, 2vw, 24px), env(safe-area-inset-right));
+  padding-bottom: max(clamp(16px, 2.4vw, 24px), env(safe-area-inset-bottom));
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: minmax(0, clamp(260px, 28vw, 300px)) minmax(0, 1fr);
   gap: 16px;
   align-items: start;
 }
@@ -74,9 +82,10 @@ html {
 .card {
   background: var(--panel);
   border-radius: 18px;
-  padding: 20px;
+  padding: clamp(14px, 2vw, 20px);
   box-shadow: var(--shadow);
   animation: rise 420ms ease-out both;
+  min-width: 0;
 }
 
 .journey-rail {
@@ -89,8 +98,10 @@ html {
   border-radius: 18px;
   box-shadow: var(--shadow);
   padding: 16px;
-  width: 300px;
-  height: calc(100vh - 48px);
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  height: min(calc(100dvh - 48px), 960px);
   display: grid;
   gap: 12px;
 }
@@ -117,7 +128,10 @@ html {
 
 .journey-track {
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  max-width: 100%;
+  overflow: auto hidden;
+  overscroll-behavior-x: contain;
   min-height: 0;
   border-radius: 14px;
   background:
@@ -287,6 +301,7 @@ html {
   gap: 12px;
   flex-wrap: wrap;
   align-items: end;
+  min-width: 0;
 }
 
 .tense-filter-box {
@@ -319,7 +334,8 @@ html {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 9px;
+  min-height: 44px;
+  padding: 10px 12px;
   border-radius: 10px;
   background: rgba(255, 255, 255, 0.9);
   border: 1px solid #dbeafe;
@@ -343,7 +359,7 @@ label {
 
 .controls > label {
   flex: 1 1 170px;
-  min-width: 170px;
+  min-width: min(170px, 100%);
 }
 
 .locked-control select {
@@ -357,6 +373,7 @@ input,
 select,
 button {
   font: inherit;
+  font-size: clamp(1rem, 0.95rem + 0.25vw, 1.05rem);
 }
 
 input,
@@ -376,7 +393,7 @@ select {
 button {
   border: none;
   border-radius: 10px;
-  padding: 10px 14px;
+  padding: 12px 16px;
   min-height: 44px;
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
   color: white;
@@ -400,6 +417,7 @@ button:disabled {
   grid-template-columns: 3.25rem minmax(0, 1fr);
   gap: 10px;
   align-items: center;
+  min-width: 0;
 }
 
 .answer-row--with-person {
@@ -493,9 +511,10 @@ button:disabled {
   margin: 0;
   font-weight: 800;
   color: #1e293b;
-  white-space: nowrap;
+  white-space: normal;
   align-self: center;
   justify-self: end;
+  text-wrap: balance;
 }
 
 .answer-person-prefix.is-hidden {
@@ -543,9 +562,9 @@ button:disabled {
 }
 
 .special-key {
-  min-width: 38px;
-  min-height: 40px;
-  padding: 6px 10px;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 8px 12px;
   border-radius: 8px;
   font-weight: 700;
 }
@@ -578,6 +597,40 @@ button:disabled {
   }
 }
 
+@media (max-width: 768px) {
+  .page {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .journey-rail {
+    position: relative;
+    top: auto;
+    height: clamp(220px, 52vh, 320px);
+    padding: 12px;
+  }
+
+  .chapter-summary {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .chapter-summary-meta {
+    justify-content: flex-start;
+  }
+
+  .controls > label,
+  .controls > button {
+    flex-basis: 100%;
+    width: 100%;
+  }
+
+  .answer-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 640px) {
   .app-credit {
     top: 6px;
@@ -586,24 +639,10 @@ button:disabled {
   }
 
   .page {
-    padding: 14px;
-    padding-left: max(14px, env(safe-area-inset-left));
-    padding-right: max(14px, env(safe-area-inset-right));
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-    grid-template-columns: 1fr;
-    gap: 12px;
-  }
-
-  .journey-rail {
-    position: relative;
-    top: auto;
-    height: 280px;
-    width: 100%;
-    padding: 12px;
+    gap: 10px;
   }
 
   .journey-track {
-    overflow: auto;
     -webkit-overflow-scrolling: touch;
   }
 
@@ -628,36 +667,29 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .controls > label {
-    min-width: 0;
-    flex-basis: 100%;
-  }
-
-  .controls > button {
-    width: 100%;
-  }
-
-  .chapter-summary {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .chapter-summary-meta {
-    justify-content: flex-start;
-  }
-
   .answer-row {
-    grid-template-columns: 2.6rem minmax(0, 1fr);
+    grid-template-columns: 1fr;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .answer-row--with-person {
+    grid-template-columns: 1fr;
   }
 
   .answer-actions {
-    grid-template-columns: 1fr 1fr;
     width: 100%;
   }
 
   .answer-actions button {
     width: 100%;
+  }
+
+  .answer-person-prefix {
+    justify-self: start;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
   }
 
   .answer-panel {
@@ -675,7 +707,6 @@ button:disabled {
 
   .special-key {
     flex: 0 0 auto;
-    min-width: 44px;
     background: #ffffff;
     color: #0f172a;
     border: 1px solid #0f172a;
@@ -697,13 +728,13 @@ button:disabled {
     height: 320px;
   }
 
-  .journey-track {
-    overflow: auto;
-  }
-
 }
 
 @media (max-width: 430px) {
+  .card {
+    padding: 12px;
+  }
+
   .journey-rail-header h2 {
     font-size: 1rem;
   }
@@ -714,5 +745,17 @@ button:disabled {
 
   .quiz-badge {
     font-size: 0.76rem;
+  }
+
+  .quiz-main-card h2 {
+    font-size: clamp(1.05rem, 5.2vw, 1.28rem);
+  }
+
+  .special-keyboard {
+    gap: 4px;
+  }
+
+  .special-key {
+    flex: 1 0 calc(25% - 4px);
   }
 }
