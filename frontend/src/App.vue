@@ -168,6 +168,16 @@ function formatPersonPrompt(person, mood, expectedAnswer = "") {
   const normalizedPerson = normalizeLabel(person);
   const normalizedMood = normalizeLabel(mood);
 
+  if (normalizedPerson === "je") {
+    const normalizedAnswer = normalizeLabel(expectedAnswer).replace(/^[^a-z]*/, "");
+    const firstChar = normalizedAnswer[0] ?? "";
+    if (/[aeiouh]/.test(firstChar)) {
+      return normalizedMood.includes("subjonctif") ? "que j'" : "j'";
+    }
+
+    return normalizedMood.includes("subjonctif") ? "que je" : "je";
+  }
+
   if (!normalizedMood.includes("subjonctif")) {
     return formatQuestionLabel(person);
   }
@@ -178,15 +188,6 @@ function formatPersonPrompt(person, mood, expectedAnswer = "") {
 
   if (normalizedPerson === "ils/elles") {
     return "qu'ils / qu'elles";
-  }
-
-  if (normalizedPerson === "je") {
-    const firstChar = String(expectedAnswer).trim()[0]?.toLowerCase() || "";
-    if (/[aeiouhàâäéèêëîïôöùûü]/.test(firstChar)) {
-      return normalizedMood.includes("subjonctif") ? "que j'" : "j'";
-    }
-
-    return normalizedMood.includes("subjonctif") ? "que je" : "je";
   }
 
   return `que ${formatQuestionLabel(person)}`;
@@ -233,7 +234,12 @@ function buildPoolKey(pool) {
 }
 
 function formatPoolLabel(pool) {
-  return formatTenseDisplay(pool.mood, pool.tense);
+  const label = formatTenseDisplay(pool.mood, pool.tense);
+  if (normalizeLabel(pool.mood) === "conditionnel" && normalizeLabel(pool.tense).includes("1ere forme")) {
+    return "Conditionnel passé<br>(1<sup>ère</sup> forme)";
+  }
+
+  return label;
 }
 
 function initLevelPoolSelection(level) {
@@ -333,7 +339,11 @@ const answerPersonPrompt = computed(() => {
     return "";
   }
 
-  const expectedAnswer = currentQuestion.value?.expected || currentQuestion.value?.acceptedAnswers?.[0] || "";
+  const expectedAnswer =
+    currentQuestion.value?.details?.conjugatedForm ||
+    currentQuestion.value?.expected ||
+    currentQuestion.value?.acceptedAnswers?.[0] ||
+    "";
   return formatPersonPrompt(person, mood, expectedAnswer);
 });
 
