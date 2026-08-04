@@ -164,14 +164,21 @@ function formatTenseDisplay(mood, tense) {
   return `${formatQuestionLabel(tense)} ${formatQuestionLabel(mood)}`;
 }
 
+function startsWithElisionVowel(answer) {
+  const normalized = normalizeLabel(answer)
+    .replace(/^(que\s+|qu'|je\s+|j'\s*)+/g, "")
+    .replace(/^[^a-z]*/, "");
+
+  const firstChar = normalized[0] ?? "";
+  return /[aeiou]/.test(firstChar);
+}
+
 function formatPersonPrompt(person, mood, expectedAnswer = "") {
   const normalizedPerson = normalizeLabel(person);
   const normalizedMood = normalizeLabel(mood);
 
   if (normalizedPerson === "je") {
-    const normalizedAnswer = normalizeLabel(expectedAnswer).replace(/^[^a-z]*/, "");
-    const firstChar = normalizedAnswer[0] ?? "";
-    if (/[aeiouh]/.test(firstChar)) {
+    if (startsWithElisionVowel(expectedAnswer)) {
       return normalizedMood.includes("subjonctif") ? "que j'" : "j'";
     }
 
