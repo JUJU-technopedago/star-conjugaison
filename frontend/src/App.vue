@@ -95,6 +95,64 @@ function normalizeLabel(value) {
     .replace(/[\u0300-\u036f]/g, "");
 }
 
+function formatQuestionLabel(value) {
+  const normalized = normalizeLabel(value);
+  const displayMap = {
+    indicatif: "Indicatif",
+    subjonctif: "Subjonctif",
+    conditionnel: "Conditionnel",
+    imperatif: "Impératif",
+    present: "Présent",
+    imparfait: "Imparfait",
+    passecompose: "Passé composé",
+    passeanterieur: "Passé antérieur",
+    futuranterieur: "Futur antérieur",
+    passesimple: "Passé simple",
+    futur: "Futur",
+    futursimple: "Futur simple",
+    plusqueparfait: "Plus-que-parfait",
+    passe: "Passé",
+    plusqueparfaitde: "Plus-que-parfait"
+  };
+
+  return displayMap[normalized] ?? String(value ?? "");
+}
+
+const questionDisplayRows = computed(() => {
+  const question = currentQuestion.value;
+  if (!question) {
+    return [];
+  }
+
+  const mood = String(question.details?.mood ?? question.mood ?? "");
+  const tense = String(question.details?.tense ?? question.tense ?? "");
+  const person = String(question.details?.person ?? question.person ?? "");
+  const verb = String(question.lemma ?? "").toLocaleUpperCase("fr-FR");
+  const kind = String(question.mode ?? currentMode.value ?? "");
+
+  if (kind === "trouver_le_temps") {
+    return [
+      { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
+      { label: "Verbe", value: verb },
+      { label: "Personne", value: formatQuestionLabel(person) }
+    ];
+  }
+
+  if (kind === "trouver_infinitif") {
+    return [
+      { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
+      { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
+      { label: "Personne", value: formatQuestionLabel(person) }
+    ];
+  }
+
+  return [
+    { label: "Verbe", value: verb },
+    { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
+    { label: "Personne", value: formatQuestionLabel(person) }
+  ].filter((row) => row.value && row.value.trim() !== "");
+});
+
 function buildPoolKey(pool) {
   return `${pool.mood}::${pool.tense}`;
 }
@@ -673,7 +731,14 @@ onUnmounted(() => {
       <section class="card quiz" v-if="currentQuestion">
         <div class="quiz-main-card">
           <p class="quiz-badge">Défi en cours</p>
-          <h2 v-html="currentQuestion.promptHtml ?? currentQuestion.prompt"></h2>
+          <h2>
+            <span class="question-meta">
+              <span v-for="row in questionDisplayRows" :key="row.label" class="question-meta-row">
+                <span class="question-meta-label">{{ row.label }} :</span>
+                <strong>{{ row.value }}</strong>
+              </span>
+            </span>
+          </h2>
         </div>
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
