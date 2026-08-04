@@ -662,9 +662,19 @@ button:disabled {
     gap: 6px;
   }
 
+  .special-keyboard-label {
+    display: none;
+  }
+
   .special-key {
     flex: 0 0 auto;
     min-width: 44px;
+    background: #ffffff;
+    color: #0f172a;
+    border: 1px solid #0f172a;
+    border-radius: 10px;
+    font-weight: 400;
+    box-shadow: none;
   }
 }
 
