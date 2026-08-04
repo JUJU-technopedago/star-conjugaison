@@ -17,7 +17,7 @@
 
 body {
   margin: 0;
-  font-family: "Space Grotesk", sans-serif;
+  font-family: "Manrope", sans-serif;
   color: var(--ink);
   background: radial-gradient(circle at 12% 10%, var(--bg-b), transparent 45%),
     radial-gradient(circle at 85% 15%, #ffe8a3, transparent 42%),
@@ -209,7 +209,8 @@ html {
 
 .hero h1 {
   margin: 6px 0;
-  font-family: "Archivo Black", sans-serif;
+  font-family: "Fraunces", serif;
+  font-weight: 800;
   font-size: clamp(1.8rem, 4vw, 2.6rem);
 }
 
