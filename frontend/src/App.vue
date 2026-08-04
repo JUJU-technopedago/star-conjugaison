@@ -165,11 +165,15 @@ function formatTenseDisplay(mood, tense) {
 }
 
 function startsWithElisionVowel(answer) {
-  const normalized = normalizeLabel(answer)
-    .replace(/^(que\s+|qu'|je\s+|j'\s*)+/g, "")
+  const cleaned = normalizeLabel(answer)
+    // Ignore optional leading pronoun chunks if they exist in accepted variants.
+    .replace(/^(que\s+|qu['’]\s*|je\s+|j['’]\s*)+/g, "")
     .replace(/^[^a-z]*/, "");
 
-  const firstChar = normalized[0] ?? "";
+  const firstWord = cleaned.split(/\s+/)[0] ?? "";
+  const firstChar = firstWord[0] ?? "";
+
+  // Explicit rule requested: A, E, I, O, U, É (normalized to e).
   return /[aeiou]/.test(firstChar);
 }
 
