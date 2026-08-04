@@ -27,6 +27,7 @@ const THREE_PERSON_IMPERATIVE_LABELS = ['tu', 'nous', 'vous'];
 const ETRE_AUXILIARY_LEMMAS = new Set([
   'aller',
   'arriver',
+  'parvenir',
   'descendre',
   'devenir',
   'entrer',
