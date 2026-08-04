@@ -657,6 +657,12 @@ button:disabled {
 
   .answer-row .answer-actions {
     grid-column: 1 / -1;
+    grid-row: 1;
+  }
+
+  .answer-row .answer-person-prefix,
+  .answer-row .answer-input {
+    grid-row: 2;
   }
 
   .answer-actions {
@@ -678,18 +684,18 @@ button:disabled {
   }
 
   body.mobile-answer-focus .special-keyboard {
-    position: fixed;
-    left: 10px;
-    right: 10px;
+    position: static;
+    left: auto;
+    right: auto;
     top: auto;
-    bottom: calc(var(--mobile-keyboard-offset) + max(6px, env(safe-area-inset-bottom)));
-    z-index: 80;
-    background: rgba(255, 255, 255, 0.96);
-    border: 1px solid #cbd5e1;
-    border-radius: 12px;
-    padding: 8px 10px;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.1);
+    bottom: auto;
+    z-index: auto;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    padding: 0;
+    backdrop-filter: none;
+    box-shadow: none;
   }
 
   .special-keyboard-label {
