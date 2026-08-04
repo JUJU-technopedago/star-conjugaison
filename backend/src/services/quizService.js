@@ -1,6 +1,5 @@
 import crypto from "node:crypto";
 import { LEVEL_ORDER, LEVEL_RULES } from "../config/cecrl.js";
-import { A1_PRIORITY_IRREGULARS } from "../config/a1Verbs.js";
 import { GLOBAL_ALLOWED_VERBS } from "../config/allowedVerbs.js";
 import { normalizeKey, normalizeText } from "../utils/normalize.js";
 import { conjugationService } from "./conjugationService.js";
@@ -126,7 +125,7 @@ export function getGameModes() {
   return GAME_MODES;
 }
 
-export function createQuestion(level, mode) {
+export function createQuestion(level, mode, options = {}) {
   cleanExpiredQuestions();
 
   const safeLevel = ensureLevel(level);
@@ -134,12 +133,9 @@ export function createQuestion(level, mode) {
   const pool = LEVEL_RULES[safeLevel].pools;
 
   const pickOptions = {
-    allowedLemmas: expandGloballyAllowedVerbs()
+    allowedLemmas: expandGloballyAllowedVerbs(),
+    verbGroups: options.verbGroups
   };
-  if (safeLevel === "A1") {
-    pickOptions.prioritizedLemmas = A1_PRIORITY_IRREGULARS;
-    pickOptions.priorityWeight = 0.55;
-  }
 
   const selected = conjugationService.pickQuestion(pool, pickOptions);
 

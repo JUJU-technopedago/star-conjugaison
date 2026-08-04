@@ -2,6 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { normalizeKey } from "../utils/normalize.js";
+import { detectVerbGroup, normalizeSelectedVerbGroups } from "../config/verbGroups.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -73,16 +74,21 @@ class ConjugationService {
     }
 
     const allowedSet = new Set((options.allowedLemmas ?? []).map((lemma) => normalizeKey(lemma)));
-    const prioritySet = new Set((options.prioritizedLemmas ?? []).map((lemma) => normalizeKey(lemma)));
+    const selectedVerbGroups = normalizeSelectedVerbGroups(options.verbGroups);
+    const selectedGroupSet = new Set(selectedVerbGroups);
+    const useGroupFilter = selectedGroupSet.size > 0;
     const useAllowedSet = allowedSet.size > 0;
 
     const eligible = [];
-    const priorityEligible = [];
 
     for (const verb of this.entries) {
       const normalizedLemma = normalizeKey(verb.lemma);
 
       if (useAllowedSet && !allowedSet.has(normalizedLemma)) {
+        continue;
+      }
+
+      if (useGroupFilter && !selectedGroupSet.has(detectVerbGroup(verb.lemma))) {
         continue;
       }
 
@@ -108,9 +114,6 @@ class ConjugationService {
           };
 
           eligible.push(candidate);
-          if (prioritySet.has(normalizedLemma)) {
-            priorityEligible.push(candidate);
-          }
         }
       }
     }
@@ -119,15 +122,8 @@ class ConjugationService {
       return null;
     }
 
-    const priorityWeight = Number.isFinite(options.priorityWeight) ? options.priorityWeight : 0;
-    const shouldPickPriority =
-      priorityEligible.length > 0 &&
-      priorityWeight > 0 &&
-      Math.random() < Math.min(Math.max(priorityWeight, 0), 1);
-
-    const source = shouldPickPriority ? priorityEligible : eligible;
-    const randomIndex = Math.floor(Math.random() * source.length);
-    return source[randomIndex];
+    const randomIndex = Math.floor(Math.random() * eligible.length);
+    return eligible[randomIndex];
   }
 }
 

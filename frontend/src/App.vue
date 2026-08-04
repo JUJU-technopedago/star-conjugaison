@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
 import { createQuestion, checkAnswer, computeProgression, getLevelRules, getGameModes } from "./services/quizEngine";
+import { VERB_GROUP_CHOICES } from "./config/verbGroups";
 import { playFinalWhistle, playTickSound, primeAudio } from "./services/timerAudio";
 import { TOTAL_GAMES, VERBS_PER_GAME, clampGameNumber, createDefaultJourneyProgress, getGameState, getNextGameNumber, getJourneyBoardSize, getJourneyCellLayout } from "./config/journey";
 
@@ -21,6 +22,7 @@ const timerId = ref(null);
 const soundEnabled = ref(true);
 const advancingToNext = ref(false);
 const selectedPoolKeysByLevel = ref({});
+const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -146,6 +148,32 @@ function onPoolToggle(poolKey, event) {
   }
 
   selectedPoolKeysByLevel.value[currentLevel.value] = selected.filter((key) => key !== poolKey);
+}
+
+function isVerbGroupSelected(groupKey) {
+  return selectedVerbGroups.value.includes(groupKey);
+}
+
+function onVerbGroupToggle(groupKey, event) {
+  const selected = [...selectedVerbGroups.value];
+  const isChecked = Boolean(event?.target?.checked);
+
+  if (isChecked) {
+    if (!selected.includes(groupKey)) {
+      selected.push(groupKey);
+    }
+    selectedVerbGroups.value = selected;
+    return;
+  }
+
+  if (selected.length <= 1) {
+    if (event?.target) {
+      event.target.checked = true;
+    }
+    return;
+  }
+
+  selectedVerbGroups.value = selected.filter((key) => key !== groupKey);
 }
 
 function getCurrentPoolDefinitions() {
@@ -375,13 +403,18 @@ async function loadQuestion() {
   feedback.value = null;
 
   try {
+    if (selectedVerbGroups.value.length === 0) {
+      throw new Error("Choisis au moins un groupe de verbes.");
+    }
+
     const selectedPoolDefinitions = getCurrentPoolDefinitions();
     if (selectedPoolDefinitions.length === 0) {
       throw new Error("Choisis au moins un temps.");
     }
 
     const payload = createQuestion(currentLevel.value, currentMode.value, {
-      poolDefinitions: selectedPoolDefinitions
+      poolDefinitions: selectedPoolDefinitions,
+      verbGroups: selectedVerbGroups.value
     });
     if (!payload) {
       throw new Error("Aucune question disponible pour ce niveau.");
@@ -586,6 +619,25 @@ onUnmounted(() => {
             <input v-model="soundEnabled" type="checkbox" />
           </label>
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
+        </div>
+
+        <div class="tense-filter-box">
+          <p class="tense-filter-title">Groupes de verbes</p>
+          <p class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</p>
+          <div class="tense-filter-grid">
+            <label
+              v-for="choice in VERB_GROUP_CHOICES"
+              :key="choice.key"
+              class="tense-filter-option"
+            >
+              <input
+                type="checkbox"
+                :checked="isVerbGroupSelected(choice.key)"
+                @change="onVerbGroupToggle(choice.key, $event)"
+              />
+              <span>{{ choice.label }}</span>
+            </label>
+          </div>
         </div>
 
         <div class="tense-filter-box">

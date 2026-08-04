@@ -20,7 +20,8 @@ export const LEVEL_RULES = {
       { mood: "indicatif", tense: "présent" },
       { mood: "indicatif", tense: "imparfait" },
       { mood: "indicatif", tense: "futur simple" },
-      { mood: "indicatif", tense: "passé composé" }
+      { mood: "indicatif", tense: "passé composé" },
+      { mood: "subjonctif", tense: "présent" }
     ],
     successRateToPromote: 0.82,
     minQuestions: 14
