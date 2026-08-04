@@ -121,6 +121,49 @@ function formatQuestionLabel(value) {
   return displayMap[normalized] ?? String(value ?? "");
 }
 
+function formatTenseDisplay(mood, tense) {
+  const moodKey = normalizeLabel(mood);
+  const tenseKey = normalizeLabel(tense);
+
+  if (moodKey === "indicatif") {
+    const indicativeMap = {
+      present: "Présent",
+      imparfait: "Imparfait",
+      "passe compose": "Passé composé",
+      "plus que parfait": "Plus-que-parfait",
+      "passe simple": "Passé simple",
+      "passe anterieur": "Passé antérieur",
+      "futur simple": "Futur simple",
+      "futur anterieur": "Futur antérieur"
+    };
+
+    const tenseLabel = indicativeMap[tenseKey] ?? formatQuestionLabel(tense);
+    return `${tenseLabel} (indicatif)`;
+  }
+
+  if (moodKey === "conditionnel" && tenseKey.includes("1ere forme")) {
+    return "Conditionnel passé (1<sup>ère</sup> forme)";
+  }
+
+  if (moodKey === "conditionnel" && tenseKey === "present") {
+    return "Conditionnel présent";
+  }
+
+  if (moodKey === "subjonctif" && tenseKey === "present") {
+    return "Subjonctif présent";
+  }
+
+  if (moodKey === "subjonctif" && tenseKey === "passe") {
+    return "Subjonctif passé";
+  }
+
+  if (moodKey === "imperatif" && tenseKey === "present") {
+    return "Impératif présent";
+  }
+
+  return `${formatQuestionLabel(tense)} ${formatQuestionLabel(mood)}`;
+}
+
 function formatPersonPrompt(person, mood, expectedAnswer = "") {
   const normalizedPerson = normalizeLabel(person);
   const normalizedMood = normalizeLabel(mood);
@@ -173,14 +216,14 @@ const questionDisplayRows = computed(() => {
   if (kind === "trouver_infinitif") {
     return [
       { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
-      { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
+      { label: "Temps", value: formatTenseDisplay(mood, tense), html: true },
       { label: "Personne", value: formatQuestionLabel(person) }
     ];
   }
 
   return [
     { label: "Verbe", value: verb },
-    { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
+    { label: "Temps", value: formatTenseDisplay(mood, tense), html: true },
     { label: "Personne", value: formatQuestionLabel(person) }
   ].filter((row) => row.value && row.value.trim() !== "");
 });
@@ -190,9 +233,7 @@ function buildPoolKey(pool) {
 }
 
 function formatPoolLabel(pool) {
-  const mood = String(pool.mood ?? "");
-  const tense = String(pool.tense ?? "");
-  return `${mood.slice(0, 1).toUpperCase()}${mood.slice(1)} ${tense}`;
+  return formatTenseDisplay(pool.mood, pool.tense);
 }
 
 function initLevelPoolSelection(level) {
@@ -813,7 +854,7 @@ onUnmounted(() => {
                 :disabled="isCurrentLevelLockedToSingleTense"
                 @change="onPoolToggle(pool.key, $event)"
               />
-              <span>{{ pool.label }}</span>
+              <span v-html="pool.label"></span>
             </label>
           </div>
         </div>
@@ -826,7 +867,8 @@ onUnmounted(() => {
             <span class="question-meta">
               <span v-for="row in questionDisplayRows" :key="row.label" class="question-meta-row">
                 <span class="question-meta-label">{{ row.label }} :</span>
-                <strong>{{ row.value }}</strong>
+                <strong v-if="row.html" v-html="row.value"></strong>
+                <strong v-else>{{ row.value }}</strong>
               </span>
             </span>
           </h2>
