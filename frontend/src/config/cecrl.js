@@ -39,7 +39,7 @@ export const LEVEL_RULES = {
       { mood: 'indicatif', tense: 'futur antérieur' },
       { mood: 'indicatif', tense: 'plus-que-parfait' },
       { mood: 'conditionnel', tense: 'présent' },
-      { mood: 'conditionnel', tense: 'passé 1ère forme' },
+      { mood: 'conditionnel', tense: 'passé (1ère forme)' },
       { mood: 'subjonctif', tense: 'présent' },
       { mood: 'subjonctif', tense: 'passé' },
       { mood: 'impératif', tense: 'présent' }
@@ -56,7 +56,7 @@ export const LEVEL_RULES = {
       { mood: 'indicatif', tense: 'passé simple' },
       { mood: 'indicatif', tense: 'passé antérieur' },
       { mood: 'conditionnel', tense: 'présent' },
-      { mood: 'conditionnel', tense: 'passé 1ère forme' },
+      { mood: 'conditionnel', tense: 'passé (1ère forme)' },
       { mood: 'subjonctif', tense: 'présent' },
       { mood: 'subjonctif', tense: 'passé' },
       { mood: 'impératif', tense: 'présent' }
