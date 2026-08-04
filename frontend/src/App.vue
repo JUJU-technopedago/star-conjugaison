@@ -608,15 +608,11 @@ onUnmounted(() => {
               <option v-for="level in levelList" :key="level" :value="level">{{ level }}</option>
             </select>
           </label>
-          <label>
+          <label class="locked-control">
             Mode
-            <select v-model="currentMode" @change="loadQuestion">
+            <select v-model="currentMode" @change="loadQuestion" disabled aria-disabled="true">
               <option v-for="[key, mode] in modeList" :key="key" :value="key">{{ mode.label }}</option>
             </select>
-          </label>
-          <label class="sound-toggle">
-            Son montre
-            <input v-model="soundEnabled" type="checkbox" />
           </label>
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
