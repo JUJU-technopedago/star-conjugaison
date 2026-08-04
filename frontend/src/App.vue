@@ -25,6 +25,7 @@ const advancingToNext = ref(false);
 const selectedPoolKeysByLevel = ref({});
 const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 const suppressScrollBlurUntil = ref(0);
+const suppressInputBlurUntil = ref(0);
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -428,6 +429,11 @@ function onAnswerFocus() {
 }
 
 function onAnswerBlur() {
+  if (Date.now() < suppressInputBlurUntil.value) {
+    focusAnswerField().catch(() => {});
+    return;
+  }
+
   if (typeof document === "undefined") {
     return;
   }
@@ -452,11 +458,7 @@ function onViewportResize() {
 }
 
 function shouldHideKeyboardOnScroll() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.matchMedia("(max-width: 640px)").matches;
+  return false;
 }
 
 function onWindowScroll() {
@@ -515,6 +517,7 @@ function onWindowKeydown(event) {
 
 function onEnterInAnswerField(event) {
   event?.preventDefault();
+  suppressInputBlurUntil.value = Date.now() + 500;
 
   if (feedback.value) {
     goToNextQuestionOnAnyKey().catch(() => {});
@@ -979,7 +982,7 @@ onUnmounted(() => {
               data-gramm="false"
               data-gramm_editor="false"
               data-enable-grammarly="false"
-              enterkeyhint="done"
+              enterkeyhint="go"
               @focus="onAnswerFocus"
               @blur="onAnswerBlur"
               @keydown.enter.prevent="onEnterInAnswerField"
