@@ -386,13 +386,13 @@ button:disabled {
 
 .answer-row {
   display: grid;
-  grid-template-columns: 1fr auto;
+  grid-template-columns: 3.25rem minmax(0, 1fr) auto;
   gap: 10px;
   align-items: center;
 }
 
 .answer-row--with-person {
-  grid-template-columns: auto 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
 }
 
 .answer-actions {
@@ -460,6 +460,11 @@ button:disabled {
   color: #1e293b;
   white-space: nowrap;
   align-self: center;
+  justify-self: end;
+}
+
+.answer-person-prefix.is-hidden {
+  visibility: hidden;
 }
 
 .answer-input {
@@ -608,14 +613,10 @@ button:disabled {
   }
 
   .answer-row {
-    grid-template-columns: 1fr;
+    grid-template-columns: 2.6rem minmax(0, 1fr);
   }
 
-  .answer-row--with-person {
-    grid-template-columns: auto 1fr;
-  }
-
-  .answer-row--with-person .answer-actions {
+  .answer-row .answer-actions {
     grid-column: 1 / -1;
   }
 
