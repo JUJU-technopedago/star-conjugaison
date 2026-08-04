@@ -902,9 +902,8 @@ onUnmounted(() => {
 <template>
   <main class="page">
     <div class="autofill-guard" aria-hidden="true">
-      <input type="text" autocomplete="username" tabindex="-1" />
-      <input type="password" autocomplete="current-password" tabindex="-1" />
-      <input type="text" autocomplete="cc-number" tabindex="-1" />
+      <input type="text" name="game-decoy" autocomplete="off" tabindex="-1" />
+      <input type="text" name="game-session-code" autocomplete="one-time-code" tabindex="-1" />
     </div>
 
     <p class="app-credit">développé par Julien Martinez-Monniello - 2026</p>
@@ -1045,10 +1044,10 @@ onUnmounted(() => {
               class="answer-input"
               ref="answerInput"
               v-model="answer"
-              name="conjugaison-free-text"
+              name="conjugation-answer"
               type="text"
               :placeholder="answerPlaceholder"
-              autocomplete="new-password"
+              autocomplete="one-time-code"
               autocapitalize="none"
               autocorrect="off"
               spellcheck="false"
