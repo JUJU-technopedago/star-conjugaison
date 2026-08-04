@@ -335,20 +335,11 @@ label {
   min-width: 170px;
 }
 
-.sound-toggle {
-  flex: 0 0 auto;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: #fff1d8;
-  border: 1px solid #fed7aa;
-  border-radius: 10px;
-  padding: 8px 12px;
-}
-
-.sound-toggle input {
-  width: 18px;
-  height: 18px;
+.locked-control select {
+  background: #e5e7eb;
+  border-color: #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
 }
 
 input,
@@ -600,11 +591,6 @@ button:disabled {
   .controls > label {
     min-width: 0;
     flex-basis: 100%;
-  }
-
-  .sound-toggle {
-    width: 100%;
-    justify-content: space-between;
   }
 
   .controls > button {
