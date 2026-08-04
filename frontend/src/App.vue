@@ -190,6 +190,11 @@ const answerPersonPrompt = computed(() => {
   }
 
   const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
+  const tense = String(currentQuestion.value?.details?.tense ?? "").toLocaleLowerCase("fr-FR");
+  if (mood === "imperatif" && tense === "present") {
+    return "";
+  }
+
   const base = mood.includes("subjonctif") ? `que ${person}` : person;
 
   // Check if person is "je" or part of "que je"
