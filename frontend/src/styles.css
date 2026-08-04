@@ -420,6 +420,29 @@ button:disabled {
   word-break: break-word;
 }
 
+.question-meta {
+  display: grid;
+  gap: 10px;
+}
+
+.question-meta--compact {
+  gap: 8px;
+}
+
+.question-meta-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.question-meta-label {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #9a3412;
+}
+
 .quiz-badge {
   margin: 0;
   display: inline-block;
