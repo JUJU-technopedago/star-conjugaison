@@ -124,7 +124,15 @@ function formatModeAndTenseWithArticle(mood, tense) {
 }
 
 function formatPersonForPrompt(person) {
-  return escapeHtml(String(person));
+  const value = String(person ?? '');
+  return escapeHtml(value.charAt(0).toLocaleUpperCase('fr-FR') + value.slice(1));
+}
+
+function formatMoodAndTenseForPrompt(mood, tense) {
+  const moodValue = String(mood ?? '');
+  const tenseValue = String(tense ?? '');
+  const displayMood = moodValue.charAt(0).toLocaleUpperCase('fr-FR') + moodValue.slice(1);
+  return escapeHtml(`${displayMood} ${tenseValue}`);
 }
 
 function getSubjectVariants(personLabel) {
@@ -245,11 +253,16 @@ function buildQuestionByMode(mode, selected) {
   const moodAndTenseWithArticle = formatModeAndTenseWithArticle(selected.moodRaw, selected.tenseRaw);
   const personPrompt = formatPersonForPrompt(selected.personLabel);
   const expectedAnswers = buildExpectedAnswers(selected);
+  const verticalPromptHtml = [
+    `<div class="question-meta-row"><span class="question-meta-label">Verbe :</span><strong>${verbPrompt}</strong></div>`,
+    `<div class="question-meta-row"><span class="question-meta-label">temps :</span><strong>${formatMoodAndTenseForPrompt(selected.moodRaw, selected.tenseRaw)}</strong></div>`,
+    `<div class="question-meta-row"><span class="question-meta-label">personne :</span><strong>${personPrompt}</strong></div>`
+  ].join('');
 
   if (mode === 'trouver_le_temps') {
     return {
       prompt: `Trouve le temps de "${selected.expected}" (${selected.personLabel}) pour ${selected.lemma}`,
-      promptHtml: `Trouve le temps de <strong>"${escapeHtml(selected.expected)}"</strong> pour le verbe <strong>"${verbPrompt}"</strong>, à la personne <strong>"${personPrompt}"</strong>`,
+      promptHtml: `<div class="question-meta question-meta--compact"><div class="question-meta-row"><span class="question-meta-label">Forme :</span><strong>"${escapeHtml(selected.expected)}"</strong></div><div class="question-meta-row"><span class="question-meta-label">Verbe :</span><strong>${verbPrompt}</strong></div><div class="question-meta-row"><span class="question-meta-label">personne :</span><strong>${personPrompt}</strong></div></div>`,
       expected: selected.tenseRaw,
       matchStrategy: 'key',
       details: {
@@ -262,7 +275,7 @@ function buildQuestionByMode(mode, selected) {
   if (mode === 'trouver_infinitif') {
     return {
       prompt: `Trouve l'infinitif de "${selected.expected}" (${selected.personLabel}, ${selected.moodRaw} ${selected.tenseRaw})`,
-      promptHtml: `Trouve l'infinitif de <strong>"${escapeHtml(selected.expected)}"</strong>, conjugué <strong>${escapeHtml(moodAndTenseWithArticle)}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
+      promptHtml: `<div class="question-meta question-meta--compact"><div class="question-meta-row"><span class="question-meta-label">Forme :</span><strong>"${escapeHtml(selected.expected)}"</strong></div><div class="question-meta-row"><span class="question-meta-label">temps :</span><strong>${formatMoodAndTenseForPrompt(selected.moodRaw, selected.tenseRaw)}</strong></div><div class="question-meta-row"><span class="question-meta-label">personne :</span><strong>${personPrompt}</strong></div></div>`,
       expected: selected.lemma,
       matchStrategy: 'key',
       details: {
@@ -276,7 +289,7 @@ function buildQuestionByMode(mode, selected) {
 
   return {
     prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" ${moodAndTenseWithArticle}, à la personne "${selected.personLabel}"`,
-    promptHtml: `Conjugue le verbe <strong>"${verbPrompt}"</strong> <strong>${escapeHtml(moodAndTenseWithArticle)}</strong>, à la personne <strong>"${personPrompt}"</strong>`,
+    promptHtml: `<div class="question-meta">${verticalPromptHtml}</div>`,
     expected: expectedAnswers[0],
     acceptedAnswers: expectedAnswers,
     matchStrategy: 'text',
