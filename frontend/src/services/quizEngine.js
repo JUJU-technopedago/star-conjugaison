@@ -1,5 +1,9 @@
 import { LEVEL_RULES } from '../config/cecrl.js';
 import { GLOBAL_ALLOWED_VERBS } from '../config/allowedVerbs.js';
+import { group1verbs as a1Group1Verbs, group2verbs as a1Group2Verbs, group3verbs as a1Group3Verbs } from '../config/a1Verbs.js';
+import { A2_ALLOWED_VERBS } from '../config/a2Verbs.js';
+import { B1_ALLOWED_VERBS } from '../config/b1Verbs.js';
+import { B2_ALLOWED_VERBS } from '../config/b2Verbs.js';
 import { C1_ALLOWED_VERBS } from '../config/c1Verbs.js';
 import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
@@ -100,9 +104,19 @@ function expandGloballyAllowedVerbs() {
   return expandReflexiveVariants(GLOBAL_ALLOWED_VERBS);
 }
 
+const A1_ALLOWED_VERBS = [...a1Group1Verbs, ...a1Group2Verbs, ...a1Group3Verbs];
+const LEVEL_ALLOWED_VERBS = {
+  A1: A1_ALLOWED_VERBS,
+  A2: A2_ALLOWED_VERBS,
+  B1: B1_ALLOWED_VERBS,
+  B2: B2_ALLOWED_VERBS,
+  C1: C1_ALLOWED_VERBS
+};
+
 function getAllowedLemmasForLevel(level) {
-  if (level === 'C1') {
-    return expandReflexiveVariants(C1_ALLOWED_VERBS);
+  const levelLemmas = LEVEL_ALLOWED_VERBS[level];
+  if (Array.isArray(levelLemmas) && levelLemmas.length > 0) {
+    return expandReflexiveVariants(levelLemmas);
   }
 
   return expandGloballyAllowedVerbs();
