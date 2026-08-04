@@ -498,6 +498,14 @@ function onWindowKeydown(event) {
     return;
   }
 
+  const target = event.target;
+  if (target instanceof HTMLElement) {
+    const tag = target.tagName;
+    if (tag === "INPUT" || tag === "TEXTAREA" || target.isContentEditable) {
+      return;
+    }
+  }
+
   if (event.repeat) {
     return;
   }
@@ -505,7 +513,9 @@ function onWindowKeydown(event) {
   goToNextQuestionOnAnyKey().catch(() => {});
 }
 
-function onEnterInAnswerField() {
+function onEnterInAnswerField(event) {
+  event?.preventDefault();
+
   if (feedback.value) {
     goToNextQuestionOnAnyKey().catch(() => {});
     return;
@@ -972,7 +982,7 @@ onUnmounted(() => {
               enterkeyhint="done"
               @focus="onAnswerFocus"
               @blur="onAnswerBlur"
-              @keyup.enter="onEnterInAnswerField"
+              @keydown.enter.prevent="onEnterInAnswerField"
             />
           </div>
 
