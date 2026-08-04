@@ -580,7 +580,6 @@ button:disabled {
 
 @media (max-width: 640px) {
   :root {
-    --mobile-keyboard-offset: 0px;
     --mobile-autofill-bar-offset: 62px;
   }
 
@@ -601,6 +600,10 @@ button:disabled {
 
   .game-stage {
     padding-bottom: 82px;
+  }
+
+  body.mobile-answer-focus .game-stage {
+    padding-bottom: 150px;
   }
 
   .journey-rail {
@@ -700,7 +703,7 @@ button:disabled {
   }
 
   body.mobile-answer-focus .special-keyboard {
-    bottom: calc(var(--mobile-keyboard-offset) + var(--mobile-autofill-bar-offset) + max(6px, env(safe-area-inset-bottom)));
+    bottom: calc(var(--mobile-autofill-bar-offset) + max(6px, env(safe-area-inset-bottom)));
     z-index: 85;
   }
 
