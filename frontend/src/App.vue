@@ -399,7 +399,7 @@ function updateMobileKeyboardOffset() {
     return;
   }
 
-  const keyboardHeight = window.innerHeight - viewport.height - viewport.offsetTop;
+  const keyboardHeight = window.innerHeight - viewport.height;
   setMobileKeyboardOffset(keyboardHeight);
 }
 
@@ -809,6 +809,12 @@ onUnmounted(() => {
 
 <template>
   <main class="page">
+    <div class="autofill-guard" aria-hidden="true">
+      <input type="text" autocomplete="username" tabindex="-1" />
+      <input type="password" autocomplete="current-password" tabindex="-1" />
+      <input type="text" autocomplete="cc-number" tabindex="-1" />
+    </div>
+
     <p class="app-credit">développé par Julien Martinez-Monniello - 2026</p>
     <aside class="journey-rail" aria-label="Parcours de 200 parties">
       <div class="journey-rail-header">
@@ -950,7 +956,7 @@ onUnmounted(() => {
               name="conjugaison-free-text"
               type="text"
               :placeholder="answerPlaceholder"
-              autocomplete="off"
+              autocomplete="new-password"
               autocapitalize="none"
               autocorrect="off"
               spellcheck="false"
