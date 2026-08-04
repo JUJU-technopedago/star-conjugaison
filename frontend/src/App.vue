@@ -372,6 +372,26 @@ async function focusAnswerField() {
   inputElement.setSelectionRange(cursorPosition, cursorPosition);
 }
 
+function keepMobileKeyboardOpen(durationMs = 900) {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  const keepUntil = Date.now() + durationMs;
+  suppressInputBlurUntil.value = Math.max(suppressInputBlurUntil.value, keepUntil);
+  const retries = [0, 40, 100, 180, 300, 480, 700];
+
+  for (const delay of retries) {
+    window.setTimeout(() => {
+      if (Date.now() > keepUntil) {
+        return;
+      }
+
+      focusAnswerField().catch(() => {});
+    }, delay);
+  }
+}
+
 function shouldAdjustForMobileKeyboard() {
   if (typeof window === "undefined") {
     return false;
@@ -484,6 +504,7 @@ async function goToNextQuestionOnAnyKey() {
   }
 
   advancingToNext.value = true;
+  keepMobileKeyboardOpen(1200);
   try {
     await loadQuestion();
   } finally {
@@ -517,7 +538,8 @@ function onWindowKeydown(event) {
 
 function onEnterInAnswerField(event) {
   event?.preventDefault();
-  suppressInputBlurUntil.value = Date.now() + 500;
+  event?.stopPropagation();
+  keepMobileKeyboardOpen(1200);
 
   if (feedback.value) {
     goToNextQuestionOnAnyKey().catch(() => {});
@@ -666,6 +688,7 @@ function insertSpecialCharacter(character) {
 
 async function loadQuestion() {
   primeAudio().catch(() => {});
+  keepMobileKeyboardOpen(1200);
   stopTimer();
   loading.value = true;
   errorMessage.value = "";
@@ -698,6 +721,7 @@ async function loadQuestion() {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
+    keepMobileKeyboardOpen(1200);
     focusAnswerField().catch(() => {});
   }
 }
@@ -986,6 +1010,7 @@ onUnmounted(() => {
               @focus="onAnswerFocus"
               @blur="onAnswerBlur"
               @keydown.enter.prevent="onEnterInAnswerField"
+              @keyup.enter.prevent.stop
             />
           </div>
 
