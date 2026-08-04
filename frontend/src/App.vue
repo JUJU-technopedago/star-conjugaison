@@ -88,6 +88,13 @@ function normalizeSpaces(value) {
   return String(value ?? "").trim().replace(/\s+/g, " ");
 }
 
+function normalizeLabel(value) {
+  return String(value ?? "")
+    .toLocaleLowerCase("fr-FR")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
 function buildPoolKey(pool) {
   return `${pool.mood}::${pool.tense}`;
 }
@@ -189,8 +196,8 @@ const answerPersonPrompt = computed(() => {
     return "";
   }
 
-  const mood = String(currentQuestion.value?.details?.mood ?? "").toLocaleLowerCase("fr-FR");
-  const tense = String(currentQuestion.value?.details?.tense ?? "").toLocaleLowerCase("fr-FR");
+  const mood = normalizeLabel(currentQuestion.value?.details?.mood);
+  const tense = normalizeLabel(currentQuestion.value?.details?.tense);
   if (mood === "imperatif" && tense === "present") {
     return "";
   }
@@ -675,7 +682,7 @@ onUnmounted(() => {
           <label class="answer-label" for="answer-input">Ta réponse</label>
           <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
-            <span v-if="answerPersonPrompt" class="answer-person-prefix">{{ answerPersonPrompt }}</span>
+            <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
               id="answer-input"
               class="answer-input"
