@@ -670,7 +670,8 @@ button:disabled {
     position: fixed;
     left: 10px;
     right: 10px;
-    bottom: calc(var(--mobile-keyboard-offset) + max(8px, env(safe-area-inset-bottom)));
+    top: calc(env(safe-area-inset-top) + 8px);
+    bottom: auto;
     z-index: 80;
     background: rgba(255, 255, 255, 0.96);
     border: 1px solid #cbd5e1;
