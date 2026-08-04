@@ -13,7 +13,8 @@ router.get("/config", (_req, res) => {
 router.post("/question", (req, res) => {
   const level = req.body?.level ?? "A1";
   const mode = req.body?.mode;
-  const question = createQuestion(level, mode);
+  const verbGroups = req.body?.verbGroups;
+  const question = createQuestion(level, mode, { verbGroups });
 
   if (!question) {
     return res.status(500).json({

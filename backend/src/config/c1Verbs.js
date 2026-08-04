@@ -1,4 +1,6 @@
-export const C1_ESSENTIAL_VERBS = [
+import { categorizeVerbsByGroup } from "./verbGroups.js";
+
+const C1_VERBS = [
   "approuver",
   "désapprouver",
   "réfuter",
@@ -100,3 +102,7 @@ export const C1_ESSENTIAL_VERBS = [
   "réduire",
   "croître"
 ];
+
+const { group1: group1verbs, group2: group2verbs, group3: group3verbs } = categorizeVerbsByGroup(C1_VERBS);
+
+export { group1verbs, group2verbs, group3verbs };

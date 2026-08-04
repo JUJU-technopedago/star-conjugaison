@@ -1,6 +1,6 @@
 import { LEVEL_RULES } from '../config/cecrl.js';
-import { A1_PRIORITY_IRREGULARS } from '../config/a1Verbs.js';
 import { GLOBAL_ALLOWED_VERBS } from '../config/allowedVerbs.js';
+import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
 import verbs from './verbesData.js';
 
@@ -363,15 +363,20 @@ function pickQuestion(poolDefinitions, options = {}) {
   }
 
   const allowedSet = new Set((options.allowedLemmas ?? []).map((lemma) => normalizeLemma(lemma)));
-  const prioritySet = new Set((options.prioritizedLemmas ?? []).map((lemma) => normalizeLemma(lemma)));
+  const selectedVerbGroups = normalizeSelectedVerbGroups(options.verbGroups);
+  const selectedGroupSet = new Set(selectedVerbGroups);
+  const useGroupFilter = selectedGroupSet.size > 0;
   const useAllowedSet = allowedSet.size > 0;
 
   const eligible = [];
-  const priorityEligible = [];
 
   for (const verb of entries) {
     const normalizedLemma = normalizeLemma(verb.lemma);
     if (useAllowedSet && !allowedSet.has(normalizedLemma)) {
+      continue;
+    }
+
+    if (useGroupFilter && !selectedGroupSet.has(detectVerbGroup(verb.lemma))) {
       continue;
     }
 
@@ -393,9 +398,6 @@ function pickQuestion(poolDefinitions, options = {}) {
           expected: tense.forms[personIndex]
         };
         eligible.push(candidate);
-        if (prioritySet.has(normalizedLemma)) {
-          priorityEligible.push(candidate);
-        }
       }
     }
   }
@@ -404,12 +406,8 @@ function pickQuestion(poolDefinitions, options = {}) {
     return null;
   }
 
-  const priorityWeight = Number.isFinite(options.priorityWeight) ? options.priorityWeight : 0;
-  const shouldPickPriority = priorityEligible.length > 0 && priorityWeight > 0 && (options.random?.() ?? Math.random()) < Math.min(Math.max(priorityWeight, 0), 1);
-
-  const source = shouldPickPriority ? priorityEligible : eligible;
-  const randomIndex = Math.floor((options.random?.() ?? Math.random()) * source.length);
-  return source[randomIndex];
+  const randomIndex = Math.floor((options.random?.() ?? Math.random()) * eligible.length);
+  return eligible[randomIndex];
 }
 
 export function getLevelRules() {
@@ -429,13 +427,9 @@ export function createQuestion(level, mode, options = {}) {
     : LEVEL_RULES[safeLevel].pools;
 
   const pickOptions = {
-    allowedLemmas: expandGloballyAllowedVerbs()
+    allowedLemmas: expandGloballyAllowedVerbs(),
+    verbGroups: options.verbGroups
   };
-
-  if (safeLevel === 'A1') {
-    pickOptions.prioritizedLemmas = A1_PRIORITY_IRREGULARS;
-    pickOptions.priorityWeight = 0.55;
-  }
 
   const selected = pickQuestion(configuredPool, { ...pickOptions, ...options });
   if (!selected) {
