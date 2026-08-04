@@ -25,6 +25,8 @@ const advancingToNext = ref(false);
 const selectedPoolKeysByLevel = ref({});
 const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 const suppressScrollBlurUntil = ref(0);
+const suppressInputBlurUntil = ref(0);
+const allowInputBlurUntil = ref(0);
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -292,6 +294,7 @@ function onPoolToggle(poolKey, event) {
       selected.push(poolKey);
     }
     selectedPoolKeysByLevel.value[currentLevel.value] = selected;
+    loadQuestion().catch(() => {});
     return;
   }
 
@@ -303,6 +306,7 @@ function onPoolToggle(poolKey, event) {
   }
 
   selectedPoolKeysByLevel.value[currentLevel.value] = selected.filter((key) => key !== poolKey);
+  loadQuestion().catch(() => {});
 }
 
 function isVerbGroupSelected(groupKey) {
@@ -318,6 +322,7 @@ function onVerbGroupToggle(groupKey, event) {
       selected.push(groupKey);
     }
     selectedVerbGroups.value = selected;
+    loadQuestion().catch(() => {});
     return;
   }
 
@@ -329,6 +334,7 @@ function onVerbGroupToggle(groupKey, event) {
   }
 
   selectedVerbGroups.value = selected.filter((key) => key !== groupKey);
+  loadQuestion().catch(() => {});
 }
 
 function getCurrentPoolDefinitions() {
@@ -369,6 +375,26 @@ async function focusAnswerField() {
   inputElement.focus({ preventScroll: true });
   const cursorPosition = answer.value.length;
   inputElement.setSelectionRange(cursorPosition, cursorPosition);
+}
+
+function keepMobileKeyboardOpen(durationMs = 900) {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  const keepUntil = Date.now() + durationMs;
+  suppressInputBlurUntil.value = Math.max(suppressInputBlurUntil.value, keepUntil);
+  const retries = [0, 40, 100, 180, 300, 480, 700];
+
+  for (const delay of retries) {
+    window.setTimeout(() => {
+      if (Date.now() > keepUntil) {
+        return;
+      }
+
+      focusAnswerField().catch(() => {});
+    }, delay);
+  }
 }
 
 function shouldAdjustForMobileKeyboard() {
@@ -432,6 +458,24 @@ function onAnswerBlur() {
     return;
   }
 
+  if (shouldAdjustForMobileKeyboard()) {
+    const now = Date.now();
+    if (now < allowInputBlurUntil.value) {
+      document.body.classList.remove("mobile-answer-focus");
+      setMobileKeyboardOffset(0);
+      return;
+    }
+
+    if (now < suppressInputBlurUntil.value) {
+      focusAnswerField().catch(() => {});
+      return;
+    }
+
+    // Keep the field active on mobile unless a scroll explicitly requested blur.
+    keepMobileKeyboardOpen(1200);
+    return;
+  }
+
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
 }
@@ -473,6 +517,7 @@ function onWindowScroll() {
     return;
   }
 
+  allowInputBlurUntil.value = Date.now() + 450;
   inputElement.blur();
 }
 
@@ -482,6 +527,7 @@ async function goToNextQuestionOnAnyKey() {
   }
 
   advancingToNext.value = true;
+  keepMobileKeyboardOpen(1200);
   try {
     await loadQuestion();
   } finally {
@@ -515,6 +561,8 @@ function onWindowKeydown(event) {
 
 function onEnterInAnswerField(event) {
   event?.preventDefault();
+  event?.stopPropagation();
+  keepMobileKeyboardOpen(1200);
 
   if (feedback.value) {
     goToNextQuestionOnAnyKey().catch(() => {});
@@ -663,6 +711,7 @@ function insertSpecialCharacter(character) {
 
 async function loadQuestion() {
   primeAudio().catch(() => {});
+  keepMobileKeyboardOpen(1200);
   stopTimer();
   loading.value = true;
   errorMessage.value = "";
@@ -695,6 +744,7 @@ async function loadQuestion() {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
+    keepMobileKeyboardOpen(1200);
     focusAnswerField().catch(() => {});
   }
 }
@@ -979,10 +1029,11 @@ onUnmounted(() => {
               data-gramm="false"
               data-gramm_editor="false"
               data-enable-grammarly="false"
-              enterkeyhint="done"
+              enterkeyhint="go"
               @focus="onAnswerFocus"
               @blur="onAnswerBlur"
               @keydown.enter.prevent="onEnterInAnswerField"
+              @keyup.enter.prevent.stop
             />
           </div>
 

@@ -1,5 +1,6 @@
 import { LEVEL_RULES } from '../config/cecrl.js';
 import { GLOBAL_ALLOWED_VERBS } from '../config/allowedVerbs.js';
+import { C1_ALLOWED_VERBS } from '../config/c1Verbs.js';
 import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
 import verbs from './verbesData.js';
@@ -120,6 +121,14 @@ function expandReflexiveVariants(lemmas) {
 
 function expandGloballyAllowedVerbs() {
   return expandReflexiveVariants(GLOBAL_ALLOWED_VERBS);
+}
+
+function getAllowedLemmasForLevel(level) {
+  if (level === 'C1') {
+    return expandReflexiveVariants(C1_ALLOWED_VERBS);
+  }
+
+  return expandGloballyAllowedVerbs();
 }
 
 function escapeHtml(value) {
@@ -493,7 +502,7 @@ export function createQuestion(level, mode, options = {}) {
     : LEVEL_RULES[safeLevel].pools;
 
   const pickOptions = {
-    allowedLemmas: expandGloballyAllowedVerbs(),
+    allowedLemmas: getAllowedLemmasForLevel(safeLevel),
     verbGroups: options.verbGroups
   };
 
