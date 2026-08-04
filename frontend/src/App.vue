@@ -118,6 +118,34 @@ function formatQuestionLabel(value) {
   return displayMap[normalized] ?? String(value ?? "");
 }
 
+function formatPersonPrompt(person, mood, expectedAnswer = "") {
+  const normalizedPerson = normalizeLabel(person);
+  const normalizedMood = normalizeLabel(mood);
+
+  if (!normalizedMood.includes("subjonctif")) {
+    return formatQuestionLabel(person);
+  }
+
+  if (normalizedPerson === "il/elle") {
+    return "qu'il / qu'elle";
+  }
+
+  if (normalizedPerson === "ils/elles") {
+    return "qu'ils / qu'elles";
+  }
+
+  if (normalizedPerson === "je") {
+    const firstChar = String(expectedAnswer).trim()[0]?.toLowerCase() || "";
+    if (/[aeiouhàâäéèêëîïôöùûü]/.test(firstChar)) {
+      return "que j'";
+    }
+
+    return "que je";
+  }
+
+  return `que ${formatQuestionLabel(person)}`;
+}
+
 const questionDisplayRows = computed(() => {
   const question = currentQuestion.value;
   if (!question) {
@@ -129,12 +157,13 @@ const questionDisplayRows = computed(() => {
   const person = String(question.details?.person ?? question.person ?? "");
   const verb = String(question.lemma ?? "").toLocaleUpperCase("fr-FR");
   const kind = String(question.mode ?? currentMode.value ?? "");
+  const expectedAnswer = String(question.details?.conjugatedForm ?? question.expected ?? "");
 
   if (kind === "trouver_le_temps") {
     return [
       { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
       { label: "Verbe", value: verb },
-      { label: "Personne", value: formatQuestionLabel(person) }
+      { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
     ];
   }
 
@@ -142,14 +171,14 @@ const questionDisplayRows = computed(() => {
     return [
       { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
       { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
-      { label: "Personne", value: formatQuestionLabel(person) }
+      { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
     ];
   }
 
   return [
     { label: "Verbe", value: verb },
     { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
-    { label: "Personne", value: formatQuestionLabel(person) }
+    { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
   ].filter((row) => row.value && row.value.trim() !== "");
 });
 
@@ -260,21 +289,8 @@ const answerPersonPrompt = computed(() => {
     return "";
   }
 
-  const base = mood.includes("subjonctif") ? `que ${person}` : person;
-
-  // Check if person is "je" or part of "que je"
-  if (person === "je") {
-    // Get first character of first accepted answer
-    const answer = currentQuestion.value?.expected || currentQuestion.value?.acceptedAnswers?.[0] || "";
-    const firstChar = String(answer).trim()[0]?.toLowerCase() || "";
-    
-    // If answer starts with vowel, use elided form
-    if (/[aeiouhàâäéèêëîïôöùûü]/.test(firstChar)) {
-      return mood.includes("subjonctif") ? "que j'" : "j'";
-    }
-  }
-
-  return base;
+  const expectedAnswer = currentQuestion.value?.expected || currentQuestion.value?.acceptedAnswers?.[0] || "";
+  return formatPersonPrompt(person, mood, expectedAnswer);
 });
 
 async function focusAnswerField() {
