@@ -27,6 +27,7 @@ const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 const suppressScrollBlurUntil = ref(0);
 const suppressInputBlurUntil = ref(0);
 const allowInputBlurUntil = ref(0);
+const mobileScrollTimeoutIds = [];
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -435,7 +436,41 @@ function scrollAnswerPanelIntoView() {
     return;
   }
 
-  panel.scrollIntoView({ block: "center", inline: "nearest" });
+  panel.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+}
+
+function clearPendingMobileScrolls() {
+  while (mobileScrollTimeoutIds.length) {
+    const timeoutId = mobileScrollTimeoutIds.pop();
+    window.clearTimeout(timeoutId);
+  }
+}
+
+function scheduleMobileAnswerRecenter() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  clearPendingMobileScrolls();
+
+  const recenter = () => {
+    const inputElement = answerInput.value;
+    if (!inputElement || document.activeElement !== inputElement) {
+      return;
+    }
+
+    updateMobileKeyboardOffset();
+    scrollAnswerPanelIntoView();
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(recenter);
+  });
+
+  for (const delay of [120, 280, 420]) {
+    const timeoutId = window.setTimeout(recenter, delay);
+    mobileScrollTimeoutIds.push(timeoutId);
+  }
 }
 
 function onAnswerFocus() {
@@ -446,11 +481,7 @@ function onAnswerFocus() {
   document.body.classList.add("mobile-answer-focus");
   updateMobileKeyboardOffset();
   suppressScrollBlurUntil.value = Date.now() + 900;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      scrollAnswerPanelIntoView();
-    });
-  });
+  scheduleMobileAnswerRecenter();
 }
 
 function onAnswerBlur() {
@@ -492,7 +523,7 @@ function onViewportResize() {
     return;
   }
 
-  onAnswerFocus();
+  scheduleMobileAnswerRecenter();
 }
 
 function shouldHideKeyboardOnScroll() {
@@ -858,6 +889,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  clearPendingMobileScrolls();
   window.removeEventListener("keydown", onWindowKeydown);
   window.removeEventListener("scroll", onWindowScroll);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
