@@ -499,21 +499,6 @@ button:disabled {
   scroll-margin-block: calc(var(--mobile-keyboard-offset) + 24px);
 }
 
-.answer-label {
-  display: inline-block;
-  margin: 0 0 8px;
-  font-size: 0.92rem;
-  font-weight: 700;
-  color: #334155;
-}
-
-.answer-strict-hint {
-  margin: 0 0 8px;
-  font-size: 0.84rem;
-  font-weight: 600;
-  color: #475569;
-}
-
 .answer-person-prefix {
   margin: 0;
   font-weight: 800;

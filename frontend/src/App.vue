@@ -1036,8 +1036,6 @@ onUnmounted(() => {
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
         <div class="answer-panel">
-          <label class="answer-label" for="answer-input">Ta réponse</label>
-          <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
@@ -1048,6 +1046,7 @@ onUnmounted(() => {
               name="conjugation-answer"
               type="text"
               :placeholder="answerPlaceholder"
+              aria-label="Ta réponse"
               autocomplete="one-time-code"
               autocapitalize="none"
               autocorrect="off"
