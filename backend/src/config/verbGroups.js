@@ -42,7 +42,7 @@ export function detectVerbGroup(lemma) {
     return "group1";
   }
 
-  if (base.endsWith("ir") && !THIRD_GROUP_IR_VERBS.has(base)) {
+  if (base.endsWith("ir") && !base.endsWith("oir") && !base.endsWith("uir") && !THIRD_GROUP_IR_VERBS.has(base)) {
     return "group2";
   }
 

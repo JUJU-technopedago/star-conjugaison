@@ -26,6 +26,7 @@ const selectedPoolKeysByLevel = ref({});
 const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 const suppressScrollBlurUntil = ref(0);
 const suppressInputBlurUntil = ref(0);
+const allowInputBlurUntil = ref(0);
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -293,6 +294,7 @@ function onPoolToggle(poolKey, event) {
       selected.push(poolKey);
     }
     selectedPoolKeysByLevel.value[currentLevel.value] = selected;
+    loadQuestion().catch(() => {});
     return;
   }
 
@@ -304,6 +306,7 @@ function onPoolToggle(poolKey, event) {
   }
 
   selectedPoolKeysByLevel.value[currentLevel.value] = selected.filter((key) => key !== poolKey);
+  loadQuestion().catch(() => {});
 }
 
 function isVerbGroupSelected(groupKey) {
@@ -319,6 +322,7 @@ function onVerbGroupToggle(groupKey, event) {
       selected.push(groupKey);
     }
     selectedVerbGroups.value = selected;
+    loadQuestion().catch(() => {});
     return;
   }
 
@@ -330,6 +334,7 @@ function onVerbGroupToggle(groupKey, event) {
   }
 
   selectedVerbGroups.value = selected.filter((key) => key !== groupKey);
+  loadQuestion().catch(() => {});
 }
 
 function getCurrentPoolDefinitions() {
@@ -449,12 +454,25 @@ function onAnswerFocus() {
 }
 
 function onAnswerBlur() {
-  if (Date.now() < suppressInputBlurUntil.value) {
-    focusAnswerField().catch(() => {});
+  if (typeof document === "undefined") {
     return;
   }
 
-  if (typeof document === "undefined") {
+  if (shouldAdjustForMobileKeyboard()) {
+    const now = Date.now();
+    if (now < allowInputBlurUntil.value) {
+      document.body.classList.remove("mobile-answer-focus");
+      setMobileKeyboardOffset(0);
+      return;
+    }
+
+    if (now < suppressInputBlurUntil.value) {
+      focusAnswerField().catch(() => {});
+      return;
+    }
+
+    // Keep the field active on mobile unless a scroll explicitly requested blur.
+    keepMobileKeyboardOpen(1200);
     return;
   }
 
@@ -478,7 +496,11 @@ function onViewportResize() {
 }
 
 function shouldHideKeyboardOnScroll() {
-  return false;
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia("(max-width: 640px)").matches;
 }
 
 function onWindowScroll() {
@@ -495,6 +517,7 @@ function onWindowScroll() {
     return;
   }
 
+  allowInputBlurUntil.value = Date.now() + 450;
   inputElement.blur();
 }
 
