@@ -568,6 +568,10 @@ button:disabled {
 }
 
 @media (max-width: 640px) {
+  :root {
+    --mobile-keyboard-offset: 0px;
+  }
+
   .app-credit {
     top: 6px;
     right: max(8px, env(safe-area-inset-right));
@@ -660,6 +664,20 @@ button:disabled {
 
   .special-keyboard {
     gap: 6px;
+  }
+
+  body.mobile-answer-focus .special-keyboard {
+    position: fixed;
+    left: 10px;
+    right: 10px;
+    bottom: calc(var(--mobile-keyboard-offset) + max(8px, env(safe-area-inset-bottom)));
+    z-index: 80;
+    background: rgba(255, 255, 255, 0.96);
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    padding: 8px 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 8px 16px rgba(15, 23, 42, 0.1);
   }
 
   .special-keyboard-label {

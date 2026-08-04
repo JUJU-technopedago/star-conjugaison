@@ -379,6 +379,30 @@ function shouldAdjustForMobileKeyboard() {
   return window.matchMedia("(max-width: 640px)").matches;
 }
 
+function setMobileKeyboardOffset(px) {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.documentElement.style.setProperty("--mobile-keyboard-offset", `${Math.max(0, px)}px`);
+}
+
+function updateMobileKeyboardOffset() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    setMobileKeyboardOffset(0);
+    return;
+  }
+
+  const viewport = window.visualViewport;
+  if (!viewport) {
+    setMobileKeyboardOffset(0);
+    return;
+  }
+
+  const keyboardHeight = window.innerHeight - viewport.height - viewport.offsetTop;
+  setMobileKeyboardOffset(keyboardHeight);
+}
+
 function scrollAnswerPanelIntoView() {
   const panel = answerPanel.value;
   if (!panel) {
@@ -393,6 +417,8 @@ function onAnswerFocus() {
     return;
   }
 
+  document.body.classList.add("mobile-answer-focus");
+  updateMobileKeyboardOffset();
   suppressScrollBlurUntil.value = Date.now() + 900;
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
@@ -401,7 +427,18 @@ function onAnswerFocus() {
   });
 }
 
+function onAnswerBlur() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  document.body.classList.remove("mobile-answer-focus");
+  setMobileKeyboardOffset(0);
+}
+
 function onViewportResize() {
+  updateMobileKeyboardOffset();
+
   if (!shouldAdjustForMobileKeyboard()) {
     return;
   }
@@ -726,6 +763,7 @@ onMounted(async () => {
   window.addEventListener("keydown", onWindowKeydown);
   window.addEventListener("scroll", onWindowScroll, { passive: true });
   window.visualViewport?.addEventListener("resize", onViewportResize);
+  updateMobileKeyboardOffset();
   loadJourneyProgress();
 
   try {
@@ -763,6 +801,8 @@ onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.removeEventListener("scroll", onWindowScroll);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
+  document.body.classList.remove("mobile-answer-focus");
+  setMobileKeyboardOffset(0);
   stopTimer();
 });
 </script>
@@ -921,6 +961,7 @@ onUnmounted(() => {
               data-bwignore="true"
               enterkeyhint="done"
               @focus="onAnswerFocus"
+              @blur="onAnswerBlur"
               @keyup.enter="onEnterInAnswerField"
             />
             <div class="answer-actions">
