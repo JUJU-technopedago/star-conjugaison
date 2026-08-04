@@ -436,7 +436,7 @@ function scrollAnswerPanelIntoView() {
     return;
   }
 
-  panel.scrollIntoView({ behavior: "smooth", block: "center", inline: "nearest" });
+  panel.scrollIntoView({ block: "center", inline: "nearest" });
 }
 
 function clearPendingMobileScrolls() {
@@ -459,6 +459,7 @@ function scheduleMobileAnswerRecenter() {
       return;
     }
 
+    suppressScrollBlurUntil.value = Date.now() + 1200;
     updateMobileKeyboardOffset();
     scrollAnswerPanelIntoView();
   };
@@ -480,7 +481,7 @@ function onAnswerFocus() {
 
   document.body.classList.add("mobile-answer-focus");
   updateMobileKeyboardOffset();
-  suppressScrollBlurUntil.value = Date.now() + 900;
+  suppressScrollBlurUntil.value = Date.now() + 1400;
   scheduleMobileAnswerRecenter();
 }
 
