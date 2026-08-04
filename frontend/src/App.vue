@@ -89,6 +89,38 @@ const answerPlaceholder = computed(() => {
   return "Tape ta réponse";
 });
 
+const feedbackToast = computed(() => {
+  if (!feedback.value) {
+    return null;
+  }
+
+  const detailParts = [];
+
+  if (feedback.value.correct) {
+    detailParts.push("Continue avec Entrée ou le bouton Suivant.");
+  } else if (feedback.value.expected) {
+    detailParts.push(`Correction : ${feedback.value.expected}`);
+  }
+
+  if (feedback.value.chapterCompleted) {
+    detailParts.push(`Partie validée : ${feedback.value.chapterCompleted}.`);
+  }
+
+  if (feedback.value.nextChapterTitle) {
+    detailParts.push(`Partie suivante : ${feedback.value.nextChapterTitle}.`);
+  }
+
+  if (feedback.value.promotedTo) {
+    detailParts.push(`Niveau suivant débloqué : ${feedback.value.promotedTo}.`);
+  }
+
+  return {
+    tone: feedback.value.correct ? "success" : "error",
+    title: feedback.value.correct ? "Bonne réponse" : "Mauvaise réponse",
+    detail: detailParts.join(" ")
+  };
+});
+
 function normalizeSpaces(value) {
   return String(value ?? "").trim().replace(/\s+/g, " ");
 }
@@ -561,6 +593,7 @@ async function goToNextQuestionOnAnyKey() {
   advancingToNext.value = true;
   keepMobileKeyboardOpen(1200);
   try {
+    feedback.value = null;
     await loadQuestion();
   } finally {
     advancingToNext.value = false;
@@ -1020,7 +1053,19 @@ onUnmounted(() => {
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
-        <div class="quiz-main-card">
+        <div class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
+          <Transition name="feedback-toast">
+            <div
+              v-if="feedbackToast"
+              class="feedback-toast"
+              :class="`is-${feedbackToast.tone}`"
+              role="status"
+              aria-live="polite"
+            >
+              <p class="feedback-toast-title">{{ feedbackToast.title }}</p>
+              <p v-if="feedbackToast.detail" class="feedback-toast-detail">{{ feedbackToast.detail }}</p>
+            </div>
+          </Transition>
           <p class="quiz-badge">Défi en cours</p>
           <h2>
             <span class="question-meta">
@@ -1094,14 +1139,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <p v-if="feedback" :class="feedback.correct ? 'ok' : 'ko'">
-          <template v-if="feedback.correct">Bravo, c'est correct.</template>
-          <template v-else>Incorrect. Réponse attendue : {{ feedback.expected }}</template>
-          <template v-if="feedback.chapterCompleted"> Partie validée: {{ feedback.chapterCompleted }}.</template>
-          <template v-if="feedback.nextChapterTitle"> Partie suivante: {{ feedback.nextChapterTitle }}.</template>
-          <template v-if="feedback.promotedTo"> Niveau suivant débloqué: {{ feedback.promotedTo }}</template>
-        </p>
-        <p v-if="feedback" class="next-hint">Appuie sur Entrée pour la question suivante.</p>
         <p v-if="errorMessage" class="ko">{{ errorMessage }}</p>
       </section>
 
