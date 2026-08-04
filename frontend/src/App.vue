@@ -16,6 +16,7 @@ const config = ref({ levels: {}, modes: {} });
 const historyByLevel = ref({});
 const errorMessage = ref("");
 const answerInput = ref(null);
+const answerPanel = ref(null);
 const specialCharacters = ["é", "è", "ê", "â", "î", "ô", "û"];
 const timeLeft = ref(null);
 const timerId = ref(null);
@@ -23,6 +24,7 @@ const soundEnabled = ref(true);
 const advancingToNext = ref(false);
 const selectedPoolKeysByLevel = ref({});
 const selectedVerbGroups = ref(["group1", "group2", "group3"]);
+const suppressScrollBlurUntil = ref(0);
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -306,6 +308,49 @@ async function focusAnswerField() {
   inputElement.setSelectionRange(cursorPosition, cursorPosition);
 }
 
+function shouldAdjustForMobileKeyboard() {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  return window.matchMedia("(max-width: 640px)").matches;
+}
+
+function scrollAnswerPanelIntoView() {
+  const panel = answerPanel.value;
+  if (!panel) {
+    return;
+  }
+
+  panel.scrollIntoView({ block: "center", inline: "nearest" });
+}
+
+function onAnswerFocus() {
+  if (!shouldAdjustForMobileKeyboard()) {
+    return;
+  }
+
+  suppressScrollBlurUntil.value = Date.now() + 900;
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scrollAnswerPanelIntoView();
+    });
+  });
+}
+
+function onViewportResize() {
+  if (!shouldAdjustForMobileKeyboard()) {
+    return;
+  }
+
+  const inputElement = answerInput.value;
+  if (!inputElement || document.activeElement !== inputElement) {
+    return;
+  }
+
+  onAnswerFocus();
+}
+
 function shouldHideKeyboardOnScroll() {
   if (typeof window === "undefined") {
     return false;
@@ -316,6 +361,10 @@ function shouldHideKeyboardOnScroll() {
 
 function onWindowScroll() {
   if (!shouldHideKeyboardOnScroll()) {
+    return;
+  }
+
+  if (Date.now() < suppressScrollBlurUntil.value) {
     return;
   }
 
@@ -613,6 +662,7 @@ onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
   window.addEventListener("scroll", onWindowScroll, { passive: true });
+  window.visualViewport?.addEventListener("resize", onViewportResize);
   loadJourneyProgress();
 
   try {
@@ -649,6 +699,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.removeEventListener("scroll", onWindowScroll);
+  window.visualViewport?.removeEventListener("resize", onViewportResize);
   stopTimer();
 });
 </script>
@@ -767,7 +818,7 @@ onUnmounted(() => {
         </div>
       </section>
 
-      <section class="card quiz" v-if="currentQuestion">
+      <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
         <div class="quiz-main-card">
           <p class="quiz-badge">Défi en cours</p>
           <h2>
@@ -798,6 +849,7 @@ onUnmounted(() => {
               autocapitalize="none"
               autocorrect="off"
               enterkeyhint="done"
+              @focus="onAnswerFocus"
               @keyup.enter="onEnterInAnswerField"
             />
             <div class="answer-actions">
