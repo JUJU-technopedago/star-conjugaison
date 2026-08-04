@@ -409,34 +409,34 @@ button:disabled {
 .quiz-main-card {
   background: linear-gradient(145deg, #fff7ed, #ffedd5);
   border: 1px solid #fdba74;
-  border-radius: 14px;
-  padding: 14px;
+  padding: 12px 14px;
   margin-bottom: 12px;
 }
 
 .quiz-main-card h2 {
-  margin: 6px 0 0;
-  line-height: 1.3;
+  margin: 5px 0 0;
+  line-height: 1.18;
   word-break: break-word;
+  font-size: clamp(1.25rem, 2.5vw, 1.85rem);
 }
 
 .question-meta {
   display: grid;
-  gap: 10px;
+  gap: 8px;
 }
 
 .question-meta--compact {
-  gap: 8px;
+  gap: 6px;
 }
 
 .question-meta-row {
   display: flex;
   flex-direction: column;
-  gap: 3px;
+  gap: 2px;
 }
 
 .question-meta-label {
-  font-size: 0.78rem;
+  font-size: 0.7rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
