@@ -113,6 +113,7 @@ function formatQuestionLabel(value) {
     futur: "Futur",
     futursimple: "Futur simple",
     plusqueparfait: "Plus-que-parfait",
+    "passe (1ere forme)": "Passé (1ère forme)",
     passe: "Passé",
     plusqueparfaitde: "Plus-que-parfait"
   };
@@ -139,10 +140,10 @@ function formatPersonPrompt(person, mood, expectedAnswer = "") {
   if (normalizedPerson === "je") {
     const firstChar = String(expectedAnswer).trim()[0]?.toLowerCase() || "";
     if (/[aeiouhàâäéèêëîïôöùûü]/.test(firstChar)) {
-      return "que j'";
+      return normalizedMood.includes("subjonctif") ? "que j'" : "j'";
     }
 
-    return "que je";
+    return normalizedMood.includes("subjonctif") ? "que je" : "je";
   }
 
   return `que ${formatQuestionLabel(person)}`;
