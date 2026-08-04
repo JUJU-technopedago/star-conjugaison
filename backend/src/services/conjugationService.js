@@ -6,16 +6,39 @@ import { detectVerbGroup, normalizeSelectedVerbGroups } from "../config/verbGrou
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const DATA_FILE = path.resolve(__dirname, "../../../verbes_lowercase.json");
+const DATA_FILE = path.resolve(__dirname, "../../../frontend/src/data/verbs.json");
 
-const PERSON_LABELS = ["je", "tu", "il/elle", "nous", "vous", "ils/elles"];
+const SIX_PERSON_LABELS = ["je", "tu", "il/elle", "nous", "vous", "ils/elles"];
+const THREE_PERSON_IMPERATIVE_LABELS = ["tu", "nous", "vous"];
 
 function isSixPersonTense(forms) {
   return Array.isArray(forms) && forms.length === 6 && forms.every((form) => typeof form === "string");
 }
 
+function isThreePersonTense(forms) {
+  return Array.isArray(forms) && forms.length === 3 && forms.every((form) => typeof form === "string");
+}
+
+function getPersonLabelsForTense(moodKey, forms) {
+  if (isSixPersonTense(forms)) {
+    return SIX_PERSON_LABELS;
+  }
+
+  if (moodKey === "imperatif" && isThreePersonTense(forms)) {
+    return THREE_PERSON_IMPERATIVE_LABELS;
+  }
+
+  return null;
+}
+
 function getLemma(entry) {
-  return entry?.infinitif?.["présent"]?.[0] ?? "verbe inconnu";
+  return (
+    entry?.infinitif?.["présent"]?.[0] ??
+    entry?.Infinitif?.["Présent"]?.[0] ??
+    entry?.infinitif?.["Present"]?.[0] ??
+    entry?.Infinitif?.["Present"]?.[0] ??
+    "verbe inconnu"
+  );
 }
 
 function buildTenseIndex(entry) {
@@ -27,16 +50,19 @@ function buildTenseIndex(entry) {
     }
 
     for (const [tenseName, forms] of Object.entries(moodValue)) {
-      if (!isSixPersonTense(forms)) {
+      const moodKey = normalizeKey(moodName);
+      const personLabels = getPersonLabelsForTense(moodKey, forms);
+      if (!personLabels) {
         continue;
       }
 
       index.push({
-        mood: normalizeKey(moodName),
+        mood: moodKey,
         tense: normalizeKey(tenseName),
         moodRaw: moodName,
         tenseRaw: tenseName,
-        forms
+        forms,
+        personLabels
       });
     }
   }
@@ -109,7 +135,7 @@ class ConjugationService {
             moodRaw: tense.moodRaw,
             tenseRaw: tense.tenseRaw,
             personIndex,
-            personLabel: PERSON_LABELS[personIndex],
+            personLabel: tense.personLabels[personIndex],
             expected: tense.forms[personIndex]
           };
 

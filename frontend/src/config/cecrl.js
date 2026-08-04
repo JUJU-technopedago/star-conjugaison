@@ -1,6 +1,9 @@
 export const LEVEL_RULES = {
   A1: {
-    pools: [{ mood: 'indicatif', tense: 'présent' }],
+    pools: [
+      { mood: 'indicatif', tense: 'présent' },
+      { mood: 'impératif', tense: 'présent' }
+    ],
     successRateToPromote: 0.8,
     minQuestions: 10
   },
@@ -8,7 +11,8 @@ export const LEVEL_RULES = {
     pools: [
       { mood: 'indicatif', tense: 'présent' },
       { mood: 'indicatif', tense: 'passé composé' },
-      { mood: 'indicatif', tense: 'imparfait' }
+      { mood: 'indicatif', tense: 'imparfait' },
+      { mood: 'impératif', tense: 'présent' }
     ],
     successRateToPromote: 0.8,
     minQuestions: 12
@@ -21,7 +25,8 @@ export const LEVEL_RULES = {
       { mood: 'indicatif', tense: 'futur simple' },
       { mood: 'indicatif', tense: 'plus-que-parfait' },
       { mood: 'conditionnel', tense: 'présent' },
-      { mood: 'subjonctif', tense: 'présent' }
+      { mood: 'subjonctif', tense: 'présent' },
+      { mood: 'impératif', tense: 'présent' }
     ],
     successRateToPromote: 0.82,
     minQuestions: 14
@@ -36,7 +41,8 @@ export const LEVEL_RULES = {
       { mood: 'conditionnel', tense: 'présent' },
       { mood: 'conditionnel', tense: 'passé 1ère forme' },
       { mood: 'subjonctif', tense: 'présent' },
-      { mood: 'subjonctif', tense: 'passé' }
+      { mood: 'subjonctif', tense: 'passé' },
+      { mood: 'impératif', tense: 'présent' }
     ],
     successRateToPromote: 0.84,
     minQuestions: 16
@@ -52,7 +58,8 @@ export const LEVEL_RULES = {
       { mood: 'conditionnel', tense: 'présent' },
       { mood: 'conditionnel', tense: 'passé 1ère forme' },
       { mood: 'subjonctif', tense: 'présent' },
-      { mood: 'subjonctif', tense: 'passé' }
+      { mood: 'subjonctif', tense: 'passé' },
+      { mood: 'impératif', tense: 'présent' }
     ],
     successRateToPromote: 0.86,
     minQuestions: 18

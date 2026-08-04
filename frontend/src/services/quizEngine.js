@@ -15,7 +15,8 @@ const GAME_MODES = {
   trouver_infinitif: { label: "Trouver l'infinitif" }
 };
 
-const PERSON_LABELS = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
+const SIX_PERSON_LABELS = ['je', 'tu', 'il/elle', 'nous', 'vous', 'ils/elles'];
+const THREE_PERSON_IMPERATIVE_LABELS = ['tu', 'nous', 'vous'];
 const ETRE_AUXILIARY_LEMMAS = new Set([
   'aller',
   'arriver',
@@ -324,6 +325,22 @@ function isSixPersonTense(forms) {
   return Array.isArray(forms) && forms.length === 6 && forms.every((form) => typeof form === 'string');
 }
 
+function isThreePersonTense(forms) {
+  return Array.isArray(forms) && forms.length === 3 && forms.every((form) => typeof form === 'string');
+}
+
+function getPersonLabelsForTense(moodKey, forms) {
+  if (isSixPersonTense(forms)) {
+    return SIX_PERSON_LABELS;
+  }
+
+  if (moodKey === 'imperatif' && isThreePersonTense(forms)) {
+    return THREE_PERSON_IMPERATIVE_LABELS;
+  }
+
+  return null;
+}
+
 function buildTenseIndex(entry) {
   const index = [];
   for (const [moodName, moodValue] of Object.entries(entry)) {
@@ -331,15 +348,18 @@ function buildTenseIndex(entry) {
       continue;
     }
     for (const [tenseName, forms] of Object.entries(moodValue)) {
-      if (!isSixPersonTense(forms)) {
+      const moodKey = normalizeKey(moodName);
+      const personLabels = getPersonLabelsForTense(moodKey, forms);
+      if (!personLabels) {
         continue;
       }
       index.push({
-        mood: normalizeKey(moodName),
+        mood: moodKey,
         tense: normalizeKey(tenseName),
         moodRaw: moodName,
         tenseRaw: tenseName,
-        forms
+        forms,
+        personLabels
       });
     }
   }
@@ -394,7 +414,7 @@ function pickQuestion(poolDefinitions, options = {}) {
           moodRaw: tense.moodRaw,
           tenseRaw: tense.tenseRaw,
           personIndex,
-          personLabel: PERSON_LABELS[personIndex],
+          personLabel: tense.personLabels[personIndex],
           expected: tense.forms[personIndex]
         };
         eligible.push(candidate);
