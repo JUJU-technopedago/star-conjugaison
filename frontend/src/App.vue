@@ -163,7 +163,7 @@ const questionDisplayRows = computed(() => {
     return [
       { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
       { label: "Verbe", value: verb },
-      { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
+      { label: "Personne", value: formatQuestionLabel(person) }
     ];
   }
 
@@ -171,14 +171,14 @@ const questionDisplayRows = computed(() => {
     return [
       { label: "Forme", value: `"${String(question.details?.conjugatedForm ?? "")}"` },
       { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
-      { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
+      { label: "Personne", value: formatQuestionLabel(person) }
     ];
   }
 
   return [
     { label: "Verbe", value: verb },
     { label: "Temps", value: `${formatQuestionLabel(mood)} ${formatQuestionLabel(tense)}` },
-    { label: "Personne", value: formatPersonPrompt(person, mood, expectedAnswer) }
+    { label: "Personne", value: formatQuestionLabel(person) }
   ].filter((row) => row.value && row.value.trim() !== "");
 });
 
