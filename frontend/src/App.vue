@@ -974,17 +974,6 @@ onUnmounted(() => {
               @blur="onAnswerBlur"
               @keyup.enter="onEnterInAnswerField"
             />
-            <div class="answer-actions">
-              <button type="button" @click="validateAnswer" :disabled="loading">Vérifier</button>
-              <button
-                type="button"
-                class="next-button"
-                @click="goToNextQuestion"
-                :disabled="!feedback || loading || advancingToNext"
-              >
-                Suivant
-              </button>
-            </div>
           </div>
 
           <div class="special-keyboard">
@@ -997,6 +986,18 @@ onUnmounted(() => {
               @click="insertSpecialCharacter(character)"
             >
               {{ character }}
+            </button>
+          </div>
+
+          <div class="answer-actions">
+            <button type="button" @click="validateAnswer" :disabled="loading">Vérifier</button>
+            <button
+              type="button"
+              class="next-button"
+              @click="goToNextQuestion"
+              :disabled="!feedback || loading || advancingToNext"
+            >
+              Suivant
             </button>
           </div>
         </div>
