@@ -774,9 +774,12 @@ function insertSpecialCharacter(character) {
   inputElement.setSelectionRange(nextPosition, nextPosition);
 }
 
-async function loadQuestion() {
+async function loadQuestion(options = {}) {
+  const { keepKeyboard = true, focusAnswer = true } = options;
   primeAudio().catch(() => {});
-  keepMobileKeyboardOpen(1200);
+  if (keepKeyboard) {
+    keepMobileKeyboardOpen(1200);
+  }
   stopTimer();
   loading.value = true;
   errorMessage.value = "";
@@ -809,8 +812,12 @@ async function loadQuestion() {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
-    keepMobileKeyboardOpen(1200);
-    focusAnswerField().catch(() => {});
+    if (keepKeyboard) {
+      keepMobileKeyboardOpen(1200);
+    }
+    if (focusAnswer) {
+      focusAnswerField().catch(() => {});
+    }
   }
 }
 
@@ -909,7 +916,7 @@ onMounted(async () => {
 
     syncLevelWithGame(journey.value.currentGame);
     ensureHistoryBucket(currentLevel.value);
-    await loadQuestion();
+    await loadQuestion({ keepKeyboard: false, focusAnswer: false });
   } catch (error) {
     errorMessage.value = error.message;
     config.value = {
