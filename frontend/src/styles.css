@@ -267,16 +267,18 @@ html {
   gap: 12px;
   flex-wrap: wrap;
   align-items: end;
+  justify-content: flex-start;
   min-width: 0;
 }
 
 .level-control {
-  flex: 1 1 220px;
-  min-width: min(220px, 100%);
+  flex: 0 0 220px;
+  width: 220px;
+  min-width: 220px;
 }
 
 .hero-primary-action {
-  width: auto;
+  width: 220px;
   margin-top: 0;
   flex: 0 0 auto;
   align-self: end;
