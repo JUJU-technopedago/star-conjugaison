@@ -38,19 +38,6 @@ const fallbackModes = {
   trouver_infinitif: { label: "Trouver l'infinitif" }
 };
 
-const score = computed(() => {
-  const all = Object.values(historyByLevel.value).flat();
-  if (!all.length) {
-    return { total: 0, correct: 0, rate: 0 };
-  }
-  const correct = all.filter(Boolean).length;
-  return {
-    total: all.length,
-    correct,
-    rate: Math.round((correct / all.length) * 100)
-  };
-});
-
 const levelList = computed(() => Object.keys(config.value.levels).length ? Object.keys(config.value.levels) : fallbackLevels);
 const modeList = computed(() => Object.entries(config.value.modes).length ? Object.entries(config.value.modes) : Object.entries(fallbackModes));
 
@@ -906,7 +893,7 @@ onUnmounted(() => {
               </span>
               <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
             </button>
-            <div class="tense-filter-content">
+            <div class="tense-filter-content" v-show="mobilePreferencesOpen.verbGroups">
             <div class="tense-filter-grid">
               <label
                 v-for="choice in VERB_GROUP_CHOICES"
@@ -936,7 +923,7 @@ onUnmounted(() => {
               </span>
               <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
             </button>
-            <div class="tense-filter-content">
+            <div class="tense-filter-content" v-show="mobilePreferencesOpen.tenses">
             <div class="tense-filter-grid">
               <label
                 v-for="pool in currentLevelPoolChoices"
@@ -1049,10 +1036,6 @@ onUnmounted(() => {
         <p v-if="errorMessage" class="ko">{{ errorMessage }}</p>
       </section>
 
-      <section class="card stats">
-        <h3>Score global</h3>
-        <p>{{ score.correct }} / {{ score.total }} - {{ score.rate }}%</p>
-      </section>
     </div>
   </main>
 </template>
