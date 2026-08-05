@@ -27,6 +27,11 @@ const selectedVerbGroups = ref(["group1", "group2", "group3"]);
 const suppressScrollBlurUntil = ref(0);
 const suppressInputBlurUntil = ref(0);
 const allowInputBlurUntil = ref(0);
+const mobileScrollTimeoutIds = [];
+const mobilePreferencesOpen = ref({
+  verbGroups: false,
+  tenses: false
+});
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -86,6 +91,38 @@ const answerPlaceholder = computed(() => {
   }
 
   return "Tape ta réponse";
+});
+
+const feedbackToast = computed(() => {
+  if (!feedback.value) {
+    return null;
+  }
+
+  const detailParts = [];
+
+  if (feedback.value.correct) {
+    detailParts.push("Continue avec Entrée ou le bouton Suivant.");
+  } else if (feedback.value.expected) {
+    detailParts.push(`Correction : ${feedback.value.expected}`);
+  }
+
+  if (feedback.value.chapterCompleted) {
+    detailParts.push(`Partie validée : ${feedback.value.chapterCompleted}.`);
+  }
+
+  if (feedback.value.nextChapterTitle) {
+    detailParts.push(`Partie suivante : ${feedback.value.nextChapterTitle}.`);
+  }
+
+  if (feedback.value.promotedTo) {
+    detailParts.push(`Niveau suivant débloqué : ${feedback.value.promotedTo}.`);
+  }
+
+  return {
+    tone: feedback.value.correct ? "success" : "error",
+    title: feedback.value.correct ? "Bonne réponse" : "Mauvaise réponse",
+    detail: detailParts.join(" ")
+  };
 });
 
 function normalizeSpaces(value) {
@@ -253,6 +290,13 @@ function formatPoolLabel(pool) {
   }
 
   return label;
+}
+
+function toggleMobilePreferencePanel(panelKey) {
+  mobilePreferencesOpen.value = {
+    ...mobilePreferencesOpen.value,
+    [panelKey]: !mobilePreferencesOpen.value[panelKey]
+  };
 }
 
 function initLevelPoolSelection(level) {
@@ -438,6 +482,41 @@ function scrollAnswerPanelIntoView() {
   panel.scrollIntoView({ block: "center", inline: "nearest" });
 }
 
+function clearPendingMobileScrolls() {
+  while (mobileScrollTimeoutIds.length) {
+    const timeoutId = mobileScrollTimeoutIds.pop();
+    window.clearTimeout(timeoutId);
+  }
+}
+
+function scheduleMobileAnswerRecenter() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  clearPendingMobileScrolls();
+
+  const recenter = () => {
+    const inputElement = answerInput.value;
+    if (!inputElement || document.activeElement !== inputElement) {
+      return;
+    }
+
+    suppressScrollBlurUntil.value = Date.now() + 1200;
+    updateMobileKeyboardOffset();
+    scrollAnswerPanelIntoView();
+  };
+
+  requestAnimationFrame(() => {
+    requestAnimationFrame(recenter);
+  });
+
+  for (const delay of [120, 280, 420]) {
+    const timeoutId = window.setTimeout(recenter, delay);
+    mobileScrollTimeoutIds.push(timeoutId);
+  }
+}
+
 function onAnswerFocus() {
   if (!shouldAdjustForMobileKeyboard()) {
     return;
@@ -445,12 +524,8 @@ function onAnswerFocus() {
 
   document.body.classList.add("mobile-answer-focus");
   updateMobileKeyboardOffset();
-  suppressScrollBlurUntil.value = Date.now() + 900;
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      scrollAnswerPanelIntoView();
-    });
-  });
+  suppressScrollBlurUntil.value = Date.now() + 1400;
+  scheduleMobileAnswerRecenter();
 }
 
 function onAnswerBlur() {
@@ -492,7 +567,7 @@ function onViewportResize() {
     return;
   }
 
-  onAnswerFocus();
+  scheduleMobileAnswerRecenter();
 }
 
 function shouldHideKeyboardOnScroll() {
@@ -529,6 +604,7 @@ async function goToNextQuestionOnAnyKey() {
   advancingToNext.value = true;
   keepMobileKeyboardOpen(1200);
   try {
+    feedback.value = null;
     await loadQuestion();
   } finally {
     advancingToNext.value = false;
@@ -709,9 +785,12 @@ function insertSpecialCharacter(character) {
   inputElement.setSelectionRange(nextPosition, nextPosition);
 }
 
-async function loadQuestion() {
+async function loadQuestion(options = {}) {
+  const { keepKeyboard = true, focusAnswer = true } = options;
   primeAudio().catch(() => {});
-  keepMobileKeyboardOpen(1200);
+  if (keepKeyboard) {
+    keepMobileKeyboardOpen(1200);
+  }
   stopTimer();
   loading.value = true;
   errorMessage.value = "";
@@ -744,8 +823,12 @@ async function loadQuestion() {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
-    keepMobileKeyboardOpen(1200);
-    focusAnswerField().catch(() => {});
+    if (keepKeyboard) {
+      keepMobileKeyboardOpen(1200);
+    }
+    if (focusAnswer) {
+      focusAnswerField().catch(() => {});
+    }
   }
 }
 
@@ -844,7 +927,7 @@ onMounted(async () => {
 
     syncLevelWithGame(journey.value.currentGame);
     ensureHistoryBucket(currentLevel.value);
-    await loadQuestion();
+    await loadQuestion({ keepKeyboard: false, focusAnswer: false });
   } catch (error) {
     errorMessage.value = error.message;
     config.value = {
@@ -858,6 +941,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
+  clearPendingMobileScrolls();
   window.removeEventListener("keydown", onWindowKeydown);
   window.removeEventListener("scroll", onWindowScroll);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
@@ -870,9 +954,8 @@ onUnmounted(() => {
 <template>
   <main class="page">
     <div class="autofill-guard" aria-hidden="true">
-      <input type="text" autocomplete="username" tabindex="-1" />
-      <input type="password" autocomplete="current-password" tabindex="-1" />
-      <input type="text" autocomplete="cc-number" tabindex="-1" />
+      <input type="text" name="game-decoy" autocomplete="off" tabindex="-1" />
+      <input type="text" name="game-session-code" autocomplete="one-time-code" tabindex="-1" />
     </div>
 
     <p class="app-credit">développé par Julien Martinez-Monniello - 2026</p>
@@ -946,9 +1029,20 @@ onUnmounted(() => {
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
 
-        <div class="tense-filter-box">
-          <p class="tense-filter-title">Groupes de verbes</p>
-          <p class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</p>
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }">
+          <button
+            type="button"
+            class="tense-filter-toggle"
+            :aria-expanded="mobilePreferencesOpen.verbGroups ? 'true' : 'false'"
+            @click="toggleMobilePreferencePanel('verbGroups')"
+          >
+            <span>
+              <span class="tense-filter-title">Groupes de verbes</span>
+              <span class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</span>
+            </span>
+            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div class="tense-filter-content">
           <div class="tense-filter-grid">
             <label
               v-for="choice in VERB_GROUP_CHOICES"
@@ -963,11 +1057,23 @@ onUnmounted(() => {
               <span v-html="choice.label"></span>
             </label>
           </div>
+          </div>
         </div>
 
-        <div class="tense-filter-box">
-          <p class="tense-filter-title">Temps d'entraînement</p>
-          <p class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</p>
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }">
+          <button
+            type="button"
+            class="tense-filter-toggle"
+            :aria-expanded="mobilePreferencesOpen.tenses ? 'true' : 'false'"
+            @click="toggleMobilePreferencePanel('tenses')"
+          >
+            <span>
+              <span class="tense-filter-title">Temps d'entraînement</span>
+              <span class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</span>
+            </span>
+            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div class="tense-filter-content">
           <div class="tense-filter-grid">
             <label
               v-for="pool in currentLevelPoolChoices"
@@ -984,11 +1090,24 @@ onUnmounted(() => {
               <span v-html="pool.label"></span>
             </label>
           </div>
+          </div>
         </div>
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
-        <div class="quiz-main-card">
+        <div class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
+          <Transition name="feedback-toast">
+            <div
+              v-if="feedbackToast"
+              class="feedback-toast"
+              :class="`is-${feedbackToast.tone}`"
+              role="status"
+              aria-live="polite"
+            >
+              <p class="feedback-toast-title">{{ feedbackToast.title }}</p>
+              <p v-if="feedbackToast.detail" class="feedback-toast-detail">{{ feedbackToast.detail }}</p>
+            </div>
+          </Transition>
           <p class="quiz-badge">Défi en cours</p>
           <h2>
             <span class="question-meta">
@@ -1004,8 +1123,6 @@ onUnmounted(() => {
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
         <div class="answer-panel">
-          <label class="answer-label" for="answer-input">Ta réponse</label>
-          <p class="answer-strict-hint">Respecte exactement la casse et les accents.</p>
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
@@ -1013,10 +1130,11 @@ onUnmounted(() => {
               class="answer-input"
               ref="answerInput"
               v-model="answer"
-              name="conjugaison-free-text"
+              name="conjugation-answer"
               type="text"
               :placeholder="answerPlaceholder"
-              autocomplete="new-password"
+              aria-label="Ta réponse"
+              autocomplete="one-time-code"
               autocapitalize="none"
               autocorrect="off"
               spellcheck="false"
@@ -1063,14 +1181,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <p v-if="feedback" :class="feedback.correct ? 'ok' : 'ko'">
-          <template v-if="feedback.correct">Bravo, c'est correct.</template>
-          <template v-else>Incorrect. Réponse attendue : {{ feedback.expected }}</template>
-          <template v-if="feedback.chapterCompleted"> Partie validée: {{ feedback.chapterCompleted }}.</template>
-          <template v-if="feedback.nextChapterTitle"> Partie suivante: {{ feedback.nextChapterTitle }}.</template>
-          <template v-if="feedback.promotedTo"> Niveau suivant débloqué: {{ feedback.promotedTo }}</template>
-        </p>
-        <p v-if="feedback" class="next-hint">Appuie sur Entrée pour la question suivante.</p>
         <p v-if="errorMessage" class="ko">{{ errorMessage }}</p>
       </section>
 

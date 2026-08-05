@@ -1,5 +1,9 @@
 import { LEVEL_RULES } from '../config/cecrl.js';
 import { GLOBAL_ALLOWED_VERBS } from '../config/allowedVerbs.js';
+import { group1verbs as a1Group1Verbs, group2verbs as a1Group2Verbs, group3verbs as a1Group3Verbs } from '../config/a1Verbs.js';
+import { A2_ALLOWED_VERBS } from '../config/a2Verbs.js';
+import { B1_ALLOWED_VERBS } from '../config/b1Verbs.js';
+import { B2_ALLOWED_VERBS } from '../config/b2Verbs.js';
 import { C1_ALLOWED_VERBS } from '../config/c1Verbs.js';
 import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
@@ -7,6 +11,8 @@ import verbs from './verbesData.js';
 
 const QUESTION_TTL_MS = 1000 * 60 * 10;
 const questionStore = new Map();
+const recentLemmaByScope = new Map();
+const MAX_RECENT_LEMMAS = 4;
 const DEFAULT_MODE = 'trouver_conjugaison';
 
 const GAME_MODES = {
@@ -21,6 +27,7 @@ const THREE_PERSON_IMPERATIVE_LABELS = ['tu', 'nous', 'vous'];
 const ETRE_AUXILIARY_LEMMAS = new Set([
   'aller',
   'arriver',
+  'parvenir',
   'descendre',
   'devenir',
   'entrer',
@@ -123,9 +130,19 @@ function expandGloballyAllowedVerbs() {
   return expandReflexiveVariants(GLOBAL_ALLOWED_VERBS);
 }
 
+const A1_ALLOWED_VERBS = [...a1Group1Verbs, ...a1Group2Verbs, ...a1Group3Verbs];
+const LEVEL_ALLOWED_VERBS = {
+  A1: A1_ALLOWED_VERBS,
+  A2: A2_ALLOWED_VERBS,
+  B1: B1_ALLOWED_VERBS,
+  B2: B2_ALLOWED_VERBS,
+  C1: C1_ALLOWED_VERBS
+};
+
 function getAllowedLemmasForLevel(level) {
-  if (level === 'C1') {
-    return expandReflexiveVariants(C1_ALLOWED_VERBS);
+  const levelLemmas = LEVEL_ALLOWED_VERBS[level];
+  if (Array.isArray(levelLemmas) && levelLemmas.length > 0) {
+    return expandReflexiveVariants(levelLemmas);
   }
 
   return expandGloballyAllowedVerbs();
@@ -431,6 +448,24 @@ function getEntries() {
   }).filter((entry) => entry.tenses.length > 0);
 }
 
+function buildSelectionScope(level, mode, poolDefinitions = [], verbGroups = []) {
+  const poolKey = (poolDefinitions ?? [])
+    .map((pool) => `${normalizeKey(pool?.mood)}::${normalizeKey(pool?.tense)}`)
+    .sort()
+    .join('|');
+  const groupKey = [...(verbGroups ?? [])].sort().join('|');
+  return `${level}::${mode}::${poolKey}::${groupKey}`;
+}
+
+function pickRandomItem(items, randomFn) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return null;
+  }
+
+  const index = Math.floor((randomFn?.() ?? Math.random()) * items.length);
+  return items[index] ?? null;
+}
+
 function pickQuestion(poolDefinitions, options = {}) {
   const entries = getEntries();
   if (!Array.isArray(poolDefinitions) || poolDefinitions.length === 0 || entries.length === 0) {
@@ -481,8 +516,13 @@ function pickQuestion(poolDefinitions, options = {}) {
     return null;
   }
 
-  const randomIndex = Math.floor((options.random?.() ?? Math.random()) * eligible.length);
-  return eligible[randomIndex];
+  const recentLemmas = new Set((options.recentLemmas ?? []).map((lemma) => normalizeLemma(lemma)));
+  const diversified = recentLemmas.size > 0
+    ? eligible.filter((candidate) => !recentLemmas.has(normalizeLemma(candidate.lemma)))
+    : eligible;
+  const source = diversified.length > 0 ? diversified : eligible;
+
+  return pickRandomItem(source, options.random);
 }
 
 export function getLevelRules() {
@@ -500,16 +540,25 @@ export function createQuestion(level, mode, options = {}) {
   const configuredPool = Array.isArray(options.poolDefinitions) && options.poolDefinitions.length > 0
     ? options.poolDefinitions
     : LEVEL_RULES[safeLevel].pools;
+  const selectedVerbGroups = normalizeSelectedVerbGroups(options.verbGroups);
+  const scopeKey = buildSelectionScope(safeLevel, safeMode, configuredPool, selectedVerbGroups);
+  const recentForScope = recentLemmaByScope.get(scopeKey) ?? [];
 
   const pickOptions = {
     allowedLemmas: getAllowedLemmasForLevel(safeLevel),
-    verbGroups: options.verbGroups
+    verbGroups: selectedVerbGroups,
+    recentLemmas: recentForScope
   };
 
   const selected = pickQuestion(configuredPool, { ...pickOptions, ...options });
   if (!selected) {
     return null;
   }
+
+  const normalizedSelectedLemma = normalizeLemma(selected.lemma);
+  const updatedRecent = [normalizedSelectedLemma, ...recentForScope.filter((lemma) => lemma !== normalizedSelectedLemma)]
+    .slice(0, MAX_RECENT_LEMMAS);
+  recentLemmaByScope.set(scopeKey, updatedRecent);
 
   const modeQuestion = buildQuestionByMode(safeMode, selected);
   const questionId = crypto.randomUUID();
