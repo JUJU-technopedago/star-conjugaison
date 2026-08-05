@@ -624,6 +624,10 @@ button:disabled {
     display: none;
   }
 
+  .stats {
+    display: none;
+  }
+
   .controls > label,
   .controls > button {
     flex-basis: 100%;
