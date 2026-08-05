@@ -33,6 +33,7 @@ const mobilePreferencesOpen = ref({
 
 let mobileCenteringFrameId = null;
 let mobileCenteringTimeoutIds = [];
+let mobileFocusStabilizationUntil = 0;
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -475,12 +476,17 @@ function centerAnswerPanelInVisibleViewport() {
   const panelCenter = window.scrollY + panelRect.top + panelRect.height / 2;
   const scrollDelta = panelCenter - visibleCenter;
 
-  if (Math.abs(scrollDelta) < 6) {
+  if (Math.abs(scrollDelta) < 24) {
+    return;
+  }
+
+  const nextTop = Math.max(0, window.scrollY + scrollDelta);
+  if (Math.abs(nextTop - window.scrollY) < 24) {
     return;
   }
 
   window.scrollTo({
-    top: Math.max(0, window.scrollY + scrollDelta),
+    top: nextTop,
     behavior: "auto"
   });
 }
@@ -521,6 +527,8 @@ function stabilizeMobileFocusPosition() {
     return;
   }
 
+  mobileFocusStabilizationUntil = Date.now() + 800;
+
   // First pass: act immediately on first tap/focus.
   scheduleMobileAnswerCentering();
 
@@ -554,6 +562,7 @@ function onAnswerBlur() {
   }
 
   document.body.classList.remove("mobile-answer-focus");
+  mobileFocusStabilizationUntil = 0;
   setMobileKeyboardOffset(0);
   clearMobileCenteringSchedule();
 }
@@ -561,7 +570,11 @@ function onAnswerBlur() {
 function onViewportResize() {
   updateMobileKeyboardOffset();
 
-  if (typeof document !== "undefined" && document.body.classList.contains("mobile-answer-focus")) {
+  if (
+    typeof document !== "undefined" &&
+    document.body.classList.contains("mobile-answer-focus") &&
+    Date.now() <= mobileFocusStabilizationUntil
+  ) {
     scheduleMobileAnswerCentering();
   }
 }
@@ -863,7 +876,6 @@ onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
   window.visualViewport?.addEventListener("resize", onViewportResize);
-  window.visualViewport?.addEventListener("scroll", onViewportResize);
   updateMobileKeyboardOffset();
   loadJourneyProgress();
 
@@ -901,7 +913,7 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
-  window.visualViewport?.removeEventListener("scroll", onViewportResize);
+  mobileFocusStabilizationUntil = 0;
   clearMobileCenteringSchedule();
 
   document.body.classList.remove("mobile-answer-focus");
