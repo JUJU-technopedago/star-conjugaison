@@ -5,10 +5,12 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/server.js",
-    "start": "node src/server.js"
+    "start": "node src/server.js",
+    "sync:verb-base": "node scripts/syncVerbBaseFromExcel.mjs"
   },
   "dependencies": {
     "cors": "^2.8.5",
-    "express": "^4.19.2"
+    "express": "^4.19.2",
+    "xlsx": "^0.18.5"
   }
 }

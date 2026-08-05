@@ -1,84 +1,10 @@
-export const group2verbs = [
-  "finir",
-  "choisir",
-  "réussir",
-  "réfléchir",
-  "remplir",
-  "grandir",
-  "grossir",
-  "maigrir",
-  "vieillir",
-  "rougir",
-  "guérir",
-  "nourrir",
-  "réunir",
-  "punir"
-];
+// Auto-generated from base_verbes.xlsx
+// Generated at 2026-08-05T21:00:17.167Z. Do not edit manually.
 
-export const group3verbs = [
-  "être",
-  "avoir",
-  "aller",
-  "faire",
-  "venir",
-  "devenir",
-  "revenir",
-  "prendre",
-  "comprendre",
-  "apprendre",
-  "mettre",
-  "dire",
-  "lire",
-  "écrire",
-  "voir",
-  "savoir",
-  "connaître",
-  "pouvoir",
-  "vouloir",
-  "devoir",
-  "partir",
-  "sortir",
-  "recevoir",
-  "offrir",
-  "tenir",
-  "suivre",
-  "conduire",
-  "rire",
-  "sourire"
-];
+import { LEVEL_GROUP_ALLOWED_VERBS, LEVEL_ALLOWED_VERBS } from './verbBase.generated.js';
 
-export const group1verbs = [
-  "arriver",
-  "aider",
-  "changer",
-  "commencer",
-  "continuer",
-  "cuisiner",
-  "décider",
-  "demander",
-  "déménager",
-  "dépenser",
-  "expliquer",
-  "gagner",
-  "garder",
-  "inviter",
-  "laver",
-  "louer",
-  "oublier",
-  "partager",
-  "passer",
-  "penser",
-  "porter",
-  "préparer",
-  "présenter",
-  "rencontrer",
-  "raconter",
-  "réserver",
-  "retourner",
-  "téléphoner",
-  "tomber",
-  "visiter",
-  "voyager"
-];
+export const group1verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A2.group1];
+export const group2verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A2.group2];
+export const group3verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A2.group3];
 
-export const A2_ALLOWED_VERBS = [...group1verbs, ...group2verbs, ...group3verbs];
+export const A2_ALLOWED_VERBS = [...LEVEL_ALLOWED_VERBS.A2];

@@ -239,7 +239,7 @@ const questionDisplayRows = computed(() => {
   const mood = String(question.details?.mood ?? question.mood ?? "");
   const tense = String(question.details?.tense ?? question.tense ?? "");
   const person = String(question.details?.person ?? question.person ?? "");
-  const verb = String(question.lemma ?? "").toLocaleUpperCase("fr-FR");
+  const verb = String(question.details?.displayLemma ?? question.displayLemma ?? question.lemma ?? "").toLocaleUpperCase("fr-FR");
   const kind = String(question.mode ?? currentMode.value ?? "");
   const expectedAnswer = String(question.details?.conjugatedForm ?? question.expected ?? "");
 

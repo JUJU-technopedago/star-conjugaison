@@ -1,92 +1,10 @@
-export const group2verbs = [
-  "accomplir",
-  "agir",
-  "approfondir",
-  "choisir",
-  "établir",
-  "enrichir",
-  "grossir",
-  "guérir",
-  "maigrir",
-  "nourrir",
-  "obéir",
-  "punir",
-  "réfléchir",
-  "remplir",
-  "réussir",
-  "réunir",
-  "ralentir",
-  "vieillir"
-];
+// Auto-generated from base_verbes.xlsx
+// Generated at 2026-08-05T21:00:17.204Z. Do not edit manually.
 
-export const group3verbs = [
-  "acquérir",
-  "apercevoir",
-  "atteindre",
-  "attendre",
-  "battre",
-  "boire",
-  "conduire",
-  "connaître",
-  "construire",
-  "courir",
-  "croire",
-  "découvrir",
-  "devoir",
-  "dire",
-  "écrire",
-  "être",
-  "faire",
-  "falloir",
-  "lire",
-  "mettre",
-  "naître",
-  "offrir",
-  "ouvrir",
-  "partir",
-  "permettre",
-  "pouvoir",
-  "prendre",
-  "recevoir",
-  "reconnaître",
-  "répondre",
-  "rire",
-  "savoir",
-  "suivre",
-  "tenir",
-  "traduire",
-  "venir",
-  "vivre",
-  "voir",
-  "vouloir"
-];
+import { LEVEL_GROUP_ALLOWED_VERBS, LEVEL_ALLOWED_VERBS } from './verbBase.generated.js';
 
-export const group1verbs = [
-  "accepter",
-  "accompagner",
-  "améliorer",
-  "augmenter",
-  "baisser",
-  "comparer",
-  "considérer",
-  "constater",
-  "développer",
-  "discuter",
-  "économiser",
-  "empêcher",
-  "encourager",
-  "essayer",
-  "éviter",
-  "exprimer",
-  "imaginer",
-  "insister",
-  "organiser",
-  "participer",
-  "proposer",
-  "protéger",
-  "réaliser",
-  "remplacer",
-  "respecter",
-  "souhaiter",
-  "utiliser"
-];
+export const group1verbs = [...LEVEL_GROUP_ALLOWED_VERBS.B1.group1];
+export const group2verbs = [...LEVEL_GROUP_ALLOWED_VERBS.B1.group2];
+export const group3verbs = [...LEVEL_GROUP_ALLOWED_VERBS.B1.group3];
+
+export const B1_ALLOWED_VERBS = [...LEVEL_ALLOWED_VERBS.B1];

@@ -1,6 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { IMPERSONAL_LEMMAS } from "../config/verbBase.generated.js";
 import { normalizeKey } from "../utils/normalize.js";
 import { detectVerbGroup, normalizeSelectedVerbGroups } from "../config/verbGroups.js";
 
@@ -26,6 +27,22 @@ function getPersonLabelsForTense(moodKey, forms) {
 
   if (moodKey === "imperatif" && isThreePersonTense(forms)) {
     return THREE_PERSON_IMPERATIVE_LABELS;
+  }
+
+  return null;
+}
+
+function getAllowedPersonIndexes(lemma, moodKey, formsLength) {
+  if (!IMPERSONAL_LEMMAS.has(normalizeKey(lemma))) {
+    return null;
+  }
+
+  if (moodKey === "imperatif") {
+    return new Set();
+  }
+
+  if (formsLength === 6) {
+    return new Set([2]);
   }
 
   return null;
@@ -127,7 +144,13 @@ class ConjugationService {
           continue;
         }
 
+        const allowedPersonIndexes = getAllowedPersonIndexes(verb.lemma, tense.mood, tense.forms.length);
+
         for (let personIndex = 0; personIndex < tense.forms.length; personIndex += 1) {
+          if (allowedPersonIndexes && !allowedPersonIndexes.has(personIndex)) {
+            continue;
+          }
+
           const candidate = {
             lemma: verb.lemma,
             mood: tense.mood,

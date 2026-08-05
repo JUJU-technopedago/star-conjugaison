@@ -1,56 +1,8 @@
-import { detectVerbGroup } from './verbGroups.js';
+// Auto-generated from base_verbes.xlsx
+// Generated at 2026-08-05T21:00:17.166Z. Do not edit manually.
 
-const A1_VERBS = [
-  'aimer',
-  'habiter',
-  'parler',
-  'ecouter',
-  'regarder',
-  'travailler',
-  'etudier',
-  'apprendre',
-  'demander',
-  'donner',
-  'acheter',
-  'payer',
-  'chercher',
-  'trouver',
-  'arriver',
-  'rester',
-  'manger',
-  'boire',
-  'porter',
-  'jouer',
-  'finir',
-  'choisir',
-  'reussir',
-  'grandir',
-  'grossir',
-  'maigrir',
-  'remplir',
-  'etre',
-  'avoir',
-  'aller',
-  'faire',
-  'pouvoir',
-  'vouloir',
-  'devoir',
-  'savoir',
-  'prendre',
-  'venir',
-  'dire',
-  'lire',
-  'ecrire',
-  'voir',
-  'mettre',
-  'partir',
-  'sortir',
-  'dormir',
-  'connaitre'
-];
+import { LEVEL_GROUP_ALLOWED_VERBS } from './verbBase.generated.js';
 
-const group1verbs = A1_VERBS.filter((verb) => detectVerbGroup(verb) === 'group1');
-const group2verbs = A1_VERBS.filter((verb) => detectVerbGroup(verb) === 'group2');
-const group3verbs = A1_VERBS.filter((verb) => detectVerbGroup(verb) === 'group3');
-
-export { group1verbs, group2verbs, group3verbs };
+export const group1verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A1.group1];
+export const group2verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A1.group2];
+export const group3verbs = [...LEVEL_GROUP_ALLOWED_VERBS.A1.group3];

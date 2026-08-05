@@ -5,6 +5,7 @@ import { A2_ALLOWED_VERBS } from '../config/a2Verbs.js';
 import { B1_ALLOWED_VERBS } from '../config/b1Verbs.js';
 import { B2_ALLOWED_VERBS } from '../config/b2Verbs.js';
 import { C1_ALLOWED_VERBS } from '../config/c1Verbs.js';
+import { IMPERSONAL_LEMMAS, PRONOMINAL_LEMMAS } from '../config/verbBase.generated.js';
 import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
 import verbs from './verbesData.js';
@@ -14,6 +15,7 @@ const questionStore = new Map();
 const recentLemmaByScope = new Map();
 const MAX_RECENT_LEMMAS = 4;
 const DEFAULT_MODE = 'trouver_conjugaison';
+const NORMALIZED_PRONOMINAL_LEMMAS = new Set(Array.from(PRONOMINAL_LEMMAS, (lemma) => normalizeKey(lemma)));
 
 const GAME_MODES = {
   trouver_conjugaison: { label: 'Trouver la conjugaison' },
@@ -74,6 +76,14 @@ const COMPOUND_TENSE_BASES = {
   'subjonctif:plus que parfait': 'subjonctifImparfait',
   'conditionnel:passe 1ere forme': 'conditionnelPresent',
   'conditionnel:passe 2eme forme': 'subjonctifImparfait'
+};
+const REFLEXIVE_PRONOUN_BY_PERSON = {
+  je: { full: 'me', elided: "m'" },
+  tu: { full: 'te', elided: "t'" },
+  'il/elle': { full: 'se', elided: "s'" },
+  nous: { full: 'nous', elided: 'nous' },
+  vous: { full: 'vous', elided: 'vous' },
+  'ils/elles': { full: 'se', elided: "s'" }
 };
 
 function ensureLevel(level) {
@@ -182,6 +192,10 @@ function normalizeSpaces(value) {
   return String(value).trim().replace(/\s+/g, ' ');
 }
 
+function startsWithVowelOrH(word) {
+  return /^[aeiouyhàâäéèêëîïôöùûüœ]/i.test(String(word ?? '').trim());
+}
+
 function maybeAddAgreementVariants(participle, usesEtre) {
   if (!usesEtre) {
     return [participle];
@@ -207,6 +221,69 @@ function isReflexiveLemma(normalizedLemma) {
   return normalizedLemma.startsWith('se ') || normalizedLemma.startsWith("s'");
 }
 
+function isPronominalLemma(lemma) {
+  const normalizedLemma = normalizeLemma(lemma);
+  return (
+    NORMALIZED_PRONOMINAL_LEMMAS.has(normalizedLemma) ||
+    NORMALIZED_PRONOMINAL_LEMMAS.has(`se ${normalizedLemma}`) ||
+    isReflexiveLemma(normalizedLemma)
+  );
+}
+
+function getDisplayLemma(lemma) {
+  const rawLemma = String(lemma ?? '').trim().toLocaleLowerCase('fr-FR');
+  const normalizedLemma = normalizeLemma(rawLemma);
+
+  if (isReflexiveLemma(normalizedLemma)) {
+    return rawLemma;
+  }
+
+  if (NORMALIZED_PRONOMINAL_LEMMAS.has(`se ${normalizedLemma}`)) {
+    return `se ${rawLemma}`;
+  }
+
+  return rawLemma;
+}
+
+function getReflexivePronounForms(personLabel, nextWord) {
+  const pronoun = REFLEXIVE_PRONOUN_BY_PERSON[personLabel];
+  if (!pronoun) {
+    return [];
+  }
+
+  if (pronoun.full === pronoun.elided) {
+    return [pronoun.full];
+  }
+
+  return startsWithVowelOrH(nextWord) ? [pronoun.elided] : [pronoun.full];
+}
+
+function addReflexiveSequence(answers, reflexivePronoun, chunks) {
+  const tail = chunks.join(' ');
+  if (reflexivePronoun.endsWith("'")) {
+    answers.add(normalizeSpaces(`${reflexivePronoun}${tail}`));
+    return;
+  }
+
+  answers.add(normalizeSpaces(`${reflexivePronoun} ${tail}`));
+}
+
+function buildPronominalImperativeAnswers(verbForm, personLabel) {
+  if (personLabel === 'tu') {
+    return [`${verbForm}-toi`];
+  }
+
+  if (personLabel === 'nous') {
+    return [`${verbForm}-nous`];
+  }
+
+  if (personLabel === 'vous') {
+    return [`${verbForm}-vous`];
+  }
+
+  return [];
+}
+
 function isDualAuxiliaryLemma(lemma) {
   const normalizedLemma = normalizeLemma(lemma);
   if (isReflexiveLemma(normalizedLemma)) {
@@ -220,7 +297,7 @@ function isDualAuxiliaryLemma(lemma) {
 
 function getAuxiliaryKeys(lemma) {
   const normalizedLemma = normalizeLemma(lemma);
-  if (isReflexiveLemma(normalizedLemma)) {
+  if (isPronominalLemma(normalizedLemma)) {
     return ['etre'];
   }
 
@@ -237,6 +314,30 @@ function getCompoundTenseBase(moodRaw, tenseRaw) {
 
 function buildExpectedAnswers(selected) {
   const compoundBase = getCompoundTenseBase(selected.moodRaw, selected.tenseRaw);
+  const isPronominal = isPronominalLemma(selected.lemma);
+
+  if (!compoundBase && isPronominal) {
+    const baseForm = normalizeSpaces(selected.expected);
+    if (selected.mood === 'imperatif') {
+      const imperativeAnswers = buildPronominalImperativeAnswers(baseForm, selected.personLabel);
+      if (imperativeAnswers.length > 0) {
+        return imperativeAnswers;
+      }
+    }
+
+    const pronounForms = getReflexivePronounForms(selected.personLabel, baseForm);
+    if (pronounForms.length === 0) {
+      return [baseForm];
+    }
+
+    const answers = new Set();
+    for (const pronoun of pronounForms) {
+      addReflexiveSequence(answers, pronoun, [baseForm]);
+    }
+
+    return Array.from(answers);
+  }
+
   if (!compoundBase) {
     return [normalizeSpaces(selected.expected)];
   }
@@ -254,8 +355,16 @@ function buildExpectedAnswers(selected) {
 
     const auxiliaryForm = auxiliaryForms[selected.personIndex];
     const participleVariants = maybeAddAgreementVariants(normalizedParticiple, auxiliaryKey === 'etre');
+    const pronounForms = isPronominal ? getReflexivePronounForms(selected.personLabel, auxiliaryForm) : [];
 
     for (const participle of participleVariants) {
+      if (isPronominal) {
+        for (const pronoun of pronounForms) {
+          addReflexiveSequence(answers, pronoun, [auxiliaryForm, participle]);
+        }
+        continue;
+      }
+
       answers.add(normalizeSpaces(`${auxiliaryForm} ${participle}`));
       for (const subject of subjectVariants) {
         if (subject.endsWith("'")) {
@@ -275,7 +384,8 @@ function buildExpectedAnswers(selected) {
 }
 
 function buildQuestionByMode(mode, selected) {
-  const verbPrompt = formatVerbForPrompt(selected.lemma);
+  const displayLemma = getDisplayLemma(selected.lemma);
+  const verbPrompt = formatVerbForPrompt(displayLemma);
   const moodAndTenseWithArticle = formatModeAndTenseWithArticle(selected.moodRaw, selected.tenseRaw);
   const personPrompt = formatPersonForPrompt(selected.personLabel);
   const expectedAnswers = buildExpectedAnswers(selected);
@@ -287,13 +397,14 @@ function buildQuestionByMode(mode, selected) {
 
   if (mode === 'trouver_le_temps') {
     return {
-      prompt: `Trouve le temps de "${selected.expected}" (${selected.personLabel}) pour ${selected.lemma}`,
+      prompt: `Trouve le temps de "${selected.expected}" (${selected.personLabel}) pour ${displayLemma}`,
       promptHtml: `<div class="question-meta question-meta--compact"><div class="question-meta-row"><span class="question-meta-label">Forme :</span><strong>"${escapeHtml(selected.expected)}"</strong></div><div class="question-meta-row"><span class="question-meta-label">Verbe :</span><strong>${verbPrompt}</strong></div><div class="question-meta-row"><span class="question-meta-label">personne :</span><strong>${personPrompt}</strong></div></div>`,
       expected: selected.tenseRaw,
       matchStrategy: 'key',
       details: {
         conjugatedForm: selected.expected,
-        person: selected.personLabel
+        person: selected.personLabel,
+        displayLemma
       }
     };
   }
@@ -302,19 +413,20 @@ function buildQuestionByMode(mode, selected) {
     return {
       prompt: `Trouve l'infinitif de "${selected.expected}" (${selected.personLabel}, ${selected.moodRaw} ${selected.tenseRaw})`,
       promptHtml: `<div class="question-meta question-meta--compact"><div class="question-meta-row"><span class="question-meta-label">Forme :</span><strong>"${escapeHtml(selected.expected)}"</strong></div><div class="question-meta-row"><span class="question-meta-label">temps :</span><strong>${formatMoodAndTenseForPrompt(selected.moodRaw, selected.tenseRaw)}</strong></div><div class="question-meta-row"><span class="question-meta-label">personne :</span><strong>${personPrompt}</strong></div></div>`,
-      expected: selected.lemma,
+      expected: displayLemma,
       matchStrategy: 'key',
       details: {
         conjugatedForm: selected.expected,
         person: selected.personLabel,
         mood: selected.moodRaw,
-        tense: selected.tenseRaw
+        tense: selected.tenseRaw,
+        displayLemma
       }
     };
   }
 
   return {
-    prompt: `Conjugue le verbe "${String(selected.lemma).toLocaleUpperCase('fr-FR')}" ${moodAndTenseWithArticle}, à la personne "${selected.personLabel}"`,
+    prompt: `Conjugue le verbe "${String(displayLemma).toLocaleUpperCase('fr-FR')}" ${moodAndTenseWithArticle}, à la personne "${selected.personLabel}"`,
     promptHtml: `<div class="question-meta">${verticalPromptHtml}</div>`,
     expected: expectedAnswers[0],
     acceptedAnswers: expectedAnswers,
@@ -322,7 +434,8 @@ function buildQuestionByMode(mode, selected) {
     details: {
       person: selected.personLabel,
       mood: selected.moodRaw,
-      tense: selected.tenseRaw
+      tense: selected.tenseRaw,
+      displayLemma
     }
   };
 }
@@ -375,6 +488,22 @@ function getPersonLabelsForTense(moodKey, forms) {
 
   if (moodKey === 'imperatif' && isThreePersonTense(forms)) {
     return THREE_PERSON_IMPERATIVE_LABELS;
+  }
+
+  return null;
+}
+
+function getAllowedPersonIndexes(lemma, moodKey, formsLength) {
+  if (!IMPERSONAL_LEMMAS.has(normalizeLemma(lemma))) {
+    return null;
+  }
+
+  if (moodKey === 'imperatif') {
+    return new Set();
+  }
+
+  if (formsLength === 6) {
+    return new Set([2]);
   }
 
   return null;
@@ -463,7 +592,13 @@ function pickQuestion(poolDefinitions, options = {}) {
         continue;
       }
 
+      const allowedPersonIndexes = getAllowedPersonIndexes(verb.lemma, tense.mood, tense.forms.length);
+
       for (let personIndex = 0; personIndex < tense.forms.length; personIndex += 1) {
+        if (allowedPersonIndexes && !allowedPersonIndexes.has(personIndex)) {
+          continue;
+        }
+
         const candidate = {
           lemma: verb.lemma,
           mood: tense.mood,
@@ -544,6 +679,7 @@ export function createQuestion(level, mode, options = {}) {
     level: safeLevel,
     mode: safeMode,
     lemma: selected.lemma,
+    displayLemma: modeQuestion.details?.displayLemma ?? selected.lemma,
     mood: selected.moodRaw,
     tense: selected.tenseRaw,
     person: selected.personLabel,

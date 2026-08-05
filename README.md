@@ -16,3 +16,22 @@ cd frontend
 npm install
 npm run dev
 ```
+
+## Synchroniser La Base Verbale (Excel)
+
+Le fichier source de la whitelist est `base_verbes.xlsx` à la racine du projet.
+
+Pour régénérer automatiquement les fichiers de config frontend/backend :
+
+```powershell
+cd backend
+npm install
+npm run sync:verb-base
+```
+
+La commande met à jour :
+
+- `frontend/src/config/verbBase.generated.js`
+- `frontend/src/config/a1Verbs.js`, `a2Verbs.js`, `b1Verbs.js`, `b2Verbs.js`, `c1Verbs.js`, `allowedVerbs.js`
+- `backend/src/config/verbBase.generated.js`
+- `backend/src/config/a1Verbs.js`, `a2Verbs.js`, `b1Verbs.js`, `b2Verbs.js`, `c1Verbs.js`, `allowedVerbs.js`
