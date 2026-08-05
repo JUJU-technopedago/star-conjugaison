@@ -415,7 +415,9 @@ const answerPersonPrompt = computed(() => {
     currentQuestion.value?.expected ||
     currentQuestion.value?.acceptedAnswers?.[0] ||
     "";
-  return formatPersonPrompt(person, mood, expectedAnswer);
+  const typedAnswer = String(answer.value ?? "");
+  const referenceAnswer = typedAnswer.trim() ? typedAnswer : expectedAnswer;
+  return formatPersonPrompt(person, mood, referenceAnswer);
 });
 
 function shouldAdjustForMobileKeyboard() {
