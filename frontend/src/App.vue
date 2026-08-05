@@ -300,6 +300,21 @@ function toggleMobilePreferencePanel(panelKey) {
   };
 }
 
+function releaseAnswerFocusForPreferenceSelection() {
+  if (!shouldAdjustForMobileKeyboard()) {
+    return;
+  }
+
+  clearPendingMobileScrolls();
+  suppressInputBlurUntil.value = 0;
+  allowInputBlurUntil.value = Date.now() + 1200;
+
+  const inputElement = answerInput.value;
+  if (inputElement && document.activeElement === inputElement) {
+    inputElement.blur();
+  }
+}
+
 function initLevelPoolSelection(level) {
   const pools = config.value.levels?.[level]?.pools ?? [];
   selectedPoolKeysByLevel.value[level] = pools.map((pool) => buildPoolKey(pool));
@@ -1035,7 +1050,7 @@ onUnmounted(() => {
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }">
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
             type="button"
             class="tense-filter-toggle"
@@ -1066,7 +1081,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }">
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
             type="button"
             class="tense-filter-toggle"
