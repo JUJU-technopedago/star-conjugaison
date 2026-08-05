@@ -17,6 +17,7 @@ const historyByLevel = ref({});
 const errorMessage = ref("");
 const answerInput = ref(null);
 const answerPanel = ref(null);
+const answerCardPanel = ref(null);
 const quizPromptCard = ref(null);
 const specialCharacters = ["é", "è", "ê", "â", "î", "ô", "û"];
 const timeLeft = ref(null);
@@ -29,6 +30,8 @@ const mobilePreferencesOpen = ref({
   verbGroups: false,
   tenses: false
 });
+
+let mobileCenteringFrameId = null;
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -447,6 +450,53 @@ function updateMobileKeyboardOffset() {
   setMobileKeyboardOffset(keyboardHeight);
 }
 
+function centerAnswerPanelInVisibleViewport() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  const panel = answerCardPanel.value;
+  if (!panel) {
+    return;
+  }
+
+  const viewport = window.visualViewport;
+  const viewportOffsetTop = viewport?.offsetTop ?? 0;
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+  const padding = 16;
+  const visibleTop = window.scrollY + viewportOffsetTop + padding;
+  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - padding;
+  const visibleCenter = (visibleTop + visibleBottom) / 2;
+
+  const panelRect = panel.getBoundingClientRect();
+  const panelCenter = window.scrollY + panelRect.top + panelRect.height / 2;
+  const scrollDelta = panelCenter - visibleCenter;
+
+  if (Math.abs(scrollDelta) < 6) {
+    return;
+  }
+
+  window.scrollTo({
+    top: Math.max(0, window.scrollY + scrollDelta),
+    behavior: "auto"
+  });
+}
+
+function scheduleMobileAnswerCentering() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (mobileCenteringFrameId !== null) {
+    window.cancelAnimationFrame(mobileCenteringFrameId);
+  }
+
+  mobileCenteringFrameId = window.requestAnimationFrame(() => {
+    mobileCenteringFrameId = null;
+    centerAnswerPanelInVisibleViewport();
+  });
+}
+
 function onAnswerFocus() {
   if (!shouldAdjustForMobileKeyboard()) {
     return;
@@ -457,6 +507,7 @@ function onAnswerFocus() {
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       scrollPromptCardIntoView();
+      scheduleMobileAnswerCentering();
     });
   });
 }
@@ -468,10 +519,19 @@ function onAnswerBlur() {
 
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
+
+  if (typeof window !== "undefined" && mobileCenteringFrameId !== null) {
+    window.cancelAnimationFrame(mobileCenteringFrameId);
+    mobileCenteringFrameId = null;
+  }
 }
 
 function onViewportResize() {
   updateMobileKeyboardOffset();
+
+  if (typeof document !== "undefined" && document.body.classList.contains("mobile-answer-focus")) {
+    scheduleMobileAnswerCentering();
+  }
 }
 
 async function goToNextQuestionOnAnyKey() {
@@ -808,6 +868,12 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
+
+  if (mobileCenteringFrameId !== null) {
+    window.cancelAnimationFrame(mobileCenteringFrameId);
+    mobileCenteringFrameId = null;
+  }
+
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
   stopTimer();
@@ -974,7 +1040,7 @@ onUnmounted(() => {
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
-        <div class="answer-panel">
+        <div class="answer-panel" ref="answerCardPanel">
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
