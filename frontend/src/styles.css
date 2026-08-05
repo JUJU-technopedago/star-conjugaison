@@ -633,6 +633,15 @@ button:disabled {
     display: none;
   }
 
+  .locked-control {
+    display: none;
+  }
+
+  .hero-primary-action {
+    margin-top: 10px;
+    margin-bottom: 2px;
+  }
+
   .controls > label,
   .controls > button {
     flex-basis: 100%;
@@ -671,10 +680,6 @@ button:disabled {
 
   .controls {
     gap: 10px;
-  }
-
-  .locked-control {
-    display: none;
   }
 
   .tense-filter-grid {

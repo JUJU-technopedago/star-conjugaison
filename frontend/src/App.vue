@@ -892,6 +892,8 @@ onUnmounted(() => {
           </label>
         </div>
 
+        <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer !</button>
+
         <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
             type="button"
@@ -956,7 +958,6 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer !</button>
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
