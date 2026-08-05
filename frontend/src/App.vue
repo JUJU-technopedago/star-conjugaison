@@ -893,65 +893,67 @@ onUnmounted(() => {
           <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer</button>
         </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
-          <button
-            type="button"
-            class="tense-filter-toggle"
-            :aria-expanded="mobilePreferencesOpen.verbGroups ? 'true' : 'false'"
-            @click="toggleMobilePreferencePanel('verbGroups')"
-          >
-            <span>
-              <span class="tense-filter-title">Groupes de verbes</span>
-            </span>
-            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
-          </button>
-          <div class="tense-filter-content">
-          <div class="tense-filter-grid">
-            <label
-              v-for="choice in VERB_GROUP_CHOICES"
-              :key="choice.key"
-              class="tense-filter-option"
+        <div class="preference-row">
+          <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
+            <button
+              type="button"
+              class="tense-filter-toggle"
+              :aria-expanded="mobilePreferencesOpen.verbGroups ? 'true' : 'false'"
+              @click="toggleMobilePreferencePanel('verbGroups')"
             >
-              <input
-                type="checkbox"
-                :checked="isVerbGroupSelected(choice.key)"
-                @change="onVerbGroupToggle(choice.key, $event)"
-              />
-              <span v-html="choice.label"></span>
-            </label>
+              <span>
+                <span class="tense-filter-title">Groupes de verbes</span>
+              </span>
+              <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="tense-filter-content">
+            <div class="tense-filter-grid">
+              <label
+                v-for="choice in VERB_GROUP_CHOICES"
+                :key="choice.key"
+                class="tense-filter-option"
+              >
+                <input
+                  type="checkbox"
+                  :checked="isVerbGroupSelected(choice.key)"
+                  @change="onVerbGroupToggle(choice.key, $event)"
+                />
+                <span v-html="choice.label"></span>
+              </label>
+            </div>
+            </div>
           </div>
-          </div>
-        </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
-          <button
-            type="button"
-            class="tense-filter-toggle"
-            :aria-expanded="mobilePreferencesOpen.tenses ? 'true' : 'false'"
-            @click="toggleMobilePreferencePanel('tenses')"
-          >
-            <span>
-              <span class="tense-filter-title">Temps d'entraînement</span>
-            </span>
-            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
-          </button>
-          <div class="tense-filter-content">
-          <div class="tense-filter-grid">
-            <label
-              v-for="pool in currentLevelPoolChoices"
-              :key="pool.key"
-              class="tense-filter-option"
-              :class="{ 'is-disabled': isCurrentLevelLockedToSingleTense }"
+          <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
+            <button
+              type="button"
+              class="tense-filter-toggle"
+              :aria-expanded="mobilePreferencesOpen.tenses ? 'true' : 'false'"
+              @click="toggleMobilePreferencePanel('tenses')"
             >
-              <input
-                type="checkbox"
-                :checked="isPoolSelected(pool.key)"
-                :disabled="isCurrentLevelLockedToSingleTense"
-                @change="onPoolToggle(pool.key, $event)"
-              />
-              <span v-html="pool.label"></span>
-            </label>
-          </div>
+              <span>
+                <span class="tense-filter-title">Temps d'entraînement</span>
+              </span>
+              <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div class="tense-filter-content">
+            <div class="tense-filter-grid">
+              <label
+                v-for="pool in currentLevelPoolChoices"
+                :key="pool.key"
+                class="tense-filter-option"
+                :class="{ 'is-disabled': isCurrentLevelLockedToSingleTense }"
+              >
+                <input
+                  type="checkbox"
+                  :checked="isPoolSelected(pool.key)"
+                  :disabled="isCurrentLevelLockedToSingleTense"
+                  @change="onPoolToggle(pool.key, $event)"
+                />
+                <span v-html="pool.label"></span>
+              </label>
+            </div>
+            </div>
           </div>
         </div>
 

@@ -272,17 +272,29 @@ html {
 }
 
 .level-control {
-  flex: 0 0 220px;
-  width: 220px;
-  min-width: 220px;
+  flex: 0 0 132px;
+  width: 132px;
+  min-width: 132px;
 }
 
 .hero-primary-action {
-  width: 220px;
+  width: 132px;
   margin-top: 0;
   flex: 0 0 auto;
   align-self: end;
   white-space: nowrap;
+}
+
+.preference-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.preference-row .tense-filter-box {
+  flex: 1 1 0;
+  margin-top: 0;
+  min-width: 0;
 }
 
 .tense-filter-box {
@@ -687,6 +699,10 @@ button:disabled {
   .controls > button {
     flex-basis: 100%;
     width: 100%;
+  }
+
+  .preference-row {
+    flex-direction: column;
   }
 
 }
