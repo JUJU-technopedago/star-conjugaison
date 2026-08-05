@@ -270,6 +270,11 @@ html {
   min-width: 0;
 }
 
+.hero-primary-action {
+  width: 100%;
+  margin-top: 12px;
+}
+
 .tense-filter-box {
   margin-top: 12px;
   background: linear-gradient(140deg, #eef6ff, #f8fbff);
@@ -668,6 +673,10 @@ button:disabled {
     gap: 10px;
   }
 
+  .locked-control {
+    display: none;
+  }
+
   .tense-filter-grid {
     grid-template-columns: 1fr;
   }
@@ -805,7 +814,10 @@ button:disabled {
   }
 
   .special-key {
-    flex: 0 0 auto;
+    flex: 1 0 calc(14.285% - 6px);
+    min-width: 0;
+    min-height: 38px;
+    padding: 6px 0;
     background: #ffffff;
     color: #0f172a;
     border: 1px solid #0f172a;
@@ -851,6 +863,7 @@ button:disabled {
   }
 
   .special-key {
-    flex: 1 0 calc(25% - 4px);
+    flex: 1 0 calc(14.285% - 4px);
+    min-height: 36px;
   }
 }
