@@ -55,7 +55,7 @@ const currentLevelPoolChoices = computed(() => {
     label: formatPoolLabel(pool)
   }));
 });
-const isCurrentLevelLockedToSingleTense = computed(() => currentLevel.value === "A1");
+const isCurrentLevelLockedToSingleTense = computed(() => false);
 
 const journeyCells = computed(() => journey.value.gameStates.map((game) => ({
   ...game,
