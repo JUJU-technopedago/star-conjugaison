@@ -44,8 +44,8 @@ html {
 }
 
 .page {
-  width: min(100%, 1280px);
-  max-width: 1280px;
+  width: min(100%, 768px);
+  max-width: 768px;
   margin: 0 auto;
   padding: clamp(14px, 2vw, 24px);
   padding-left: max(clamp(14px, 2vw, 24px), env(safe-area-inset-left));
