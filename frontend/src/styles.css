@@ -280,7 +280,8 @@ html {
   background: linear-gradient(140deg, #eef6ff, #f8fbff);
   border: 1px solid #bfdbfe;
   border-radius: 14px;
-  padding: 12px;
+  padding: 0;
+  overflow: hidden;
 }
 
 .tense-filter-title {
@@ -296,11 +297,31 @@ html {
 }
 
 .tense-filter-toggle {
-  display: none;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 0;
+  min-height: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
 }
 
 .tense-filter-content {
+  display: none;
+  padding: 0 12px 12px;
+}
+
+.tense-filter-box.is-open .tense-filter-content {
   display: block;
+}
+
+.tense-filter-toggle:hover {
+  transform: none;
+  filter: none;
 }
 
 .tense-filter-chevron {
@@ -320,6 +341,16 @@ html {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
   gap: 8px;
+}
+
+@media (min-width: 1025px) {
+  .page {
+    grid-template-columns: 1fr;
+  }
+
+  .journey-rail {
+    display: none;
+  }
 }
 
 .tense-filter-option {
@@ -687,50 +718,7 @@ button:disabled {
   }
 
   .tense-filter-box {
-    padding: 0;
-    overflow: hidden;
-  }
-
-  .tense-filter-toggle {
-    width: 100%;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    padding: 12px;
-    border-radius: 0;
-    min-height: 0;
-    background: transparent;
-    color: inherit;
-    text-align: left;
-  }
-
-  .tense-filter-toggle:hover {
-    transform: none;
-    filter: none;
-  }
-
-  .tense-filter-toggle .tense-filter-title,
-  .tense-filter-toggle .tense-filter-subtitle {
-    display: block;
-  }
-
-  .tense-filter-toggle .tense-filter-subtitle {
-    margin: 4px 0 0;
-  }
-
-  .tense-filter-box > .tense-filter-title,
-  .tense-filter-box > .tense-filter-subtitle {
-    display: none;
-  }
-
-  .tense-filter-content {
-    display: none;
-    padding: 0 12px 12px;
-  }
-
-  .tense-filter-box.is-open .tense-filter-content {
-    display: block;
+    padding-bottom: 6px;
   }
 
   .answer-row {
