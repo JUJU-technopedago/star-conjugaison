@@ -258,47 +258,6 @@ html {
   margin-top: 0;
 }
 
-.chapter-summary {
-  display: flex;
-  justify-content: space-between;
-  gap: 16px;
-  align-items: end;
-  background: linear-gradient(135deg, #eff6ff, #f8fafc);
-  border: 1px solid #dbeafe;
-  border-radius: 16px;
-  padding: 14px 16px;
-  margin: 16px 0;
-}
-
-.chapter-summary-label {
-  margin: 0 0 4px;
-  font-size: 0.8rem;
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: #475569;
-}
-
-.chapter-summary-title {
-  margin: 0;
-  font-weight: 800;
-  font-size: 1.1rem;
-}
-
-.chapter-summary-subtitle {
-  margin: 4px 0 0;
-  color: #475569;
-}
-
-.chapter-summary-meta {
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  justify-content: flex-end;
-  font-weight: 800;
-  color: #1e293b;
-}
-
 .chapter-path {
   display: none;
 }
@@ -470,6 +429,7 @@ button:disabled {
   border: 1px solid #fdba74;
   padding: 10px 12px;
   margin-bottom: 12px;
+  scroll-margin-top: 10px;
 }
 
 .quiz-main-card h2 {
@@ -661,20 +621,11 @@ button:disabled {
   }
 
   .journey-rail {
-    position: relative;
-    top: auto;
-    height: clamp(220px, 52vh, 320px);
-    padding: 12px;
+    display: none;
   }
 
-  .chapter-summary {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .chapter-summary-meta {
-    justify-content: flex-start;
+  .stats {
+    display: none;
   }
 
   .controls > label,
@@ -792,6 +743,29 @@ button:disabled {
 
   .quiz-main-card h2 {
     font-size: clamp(1rem, 4.7vw, 1.22rem);
+  }
+
+  .mobile-answer-focus .quiz-main-card {
+    padding: 8px 10px;
+    margin-bottom: 10px;
+  }
+
+  .mobile-answer-focus .quiz-main-card h2 {
+    font-size: clamp(0.96rem, 4.2vw, 1.1rem);
+    line-height: 1.08;
+  }
+
+  .mobile-answer-focus .question-meta {
+    gap: 4px;
+  }
+
+  .mobile-answer-focus .question-meta-label {
+    font-size: 0.54rem;
+  }
+
+  .mobile-answer-focus .quiz-badge {
+    font-size: 0.68rem;
+    padding: 3px 9px;
   }
 
   .question-meta-label {

@@ -17,6 +17,7 @@ const historyByLevel = ref({});
 const errorMessage = ref("");
 const answerInput = ref(null);
 const answerPanel = ref(null);
+const quizPromptCard = ref(null);
 const specialCharacters = ["é", "è", "ê", "â", "î", "ô", "û"];
 const timeLeft = ref(null);
 const timerId = ref(null);
@@ -24,10 +25,6 @@ const soundEnabled = ref(true);
 const advancingToNext = ref(false);
 const selectedPoolKeysByLevel = ref({});
 const selectedVerbGroups = ref(["group1", "group2", "group3"]);
-const suppressScrollBlurUntil = ref(0);
-const suppressInputBlurUntil = ref(0);
-const allowInputBlurUntil = ref(0);
-const mobileScrollTimeoutIds = [];
 const mobilePreferencesOpen = ref({
   verbGroups: false,
   tenses: false
@@ -299,6 +296,20 @@ function toggleMobilePreferencePanel(panelKey) {
   };
 }
 
+function releaseAnswerFocusForPreferenceSelection() {
+  if (!shouldAdjustForMobileKeyboard()) {
+    return;
+  }
+
+  const inputElement = answerInput.value;
+  if (inputElement && document.activeElement === inputElement) {
+    inputElement.blur();
+  }
+
+  document.body.classList.remove("mobile-answer-focus");
+  setMobileKeyboardOffset(0);
+}
+
 function initLevelPoolSelection(level) {
   const pools = config.value.levels?.[level]?.pools ?? [];
   selectedPoolKeysByLevel.value[level] = pools.map((pool) => buildPoolKey(pool));
@@ -408,39 +419,6 @@ const answerPersonPrompt = computed(() => {
   return formatPersonPrompt(person, mood, expectedAnswer);
 });
 
-async function focusAnswerField() {
-  await nextTick();
-
-  const inputElement = answerInput.value;
-  if (!inputElement) {
-    return;
-  }
-
-  inputElement.focus({ preventScroll: true });
-  const cursorPosition = answer.value.length;
-  inputElement.setSelectionRange(cursorPosition, cursorPosition);
-}
-
-function keepMobileKeyboardOpen(durationMs = 900) {
-  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
-    return;
-  }
-
-  const keepUntil = Date.now() + durationMs;
-  suppressInputBlurUntil.value = Math.max(suppressInputBlurUntil.value, keepUntil);
-  const retries = [0, 40, 100, 180, 300, 480, 700];
-
-  for (const delay of retries) {
-    window.setTimeout(() => {
-      if (Date.now() > keepUntil) {
-        return;
-      }
-
-      focusAnswerField().catch(() => {});
-    }, delay);
-  }
-}
-
 function shouldAdjustForMobileKeyboard() {
   if (typeof window === "undefined") {
     return false;
@@ -473,50 +451,6 @@ function updateMobileKeyboardOffset() {
   setMobileKeyboardOffset(keyboardHeight);
 }
 
-function scrollAnswerPanelIntoView() {
-  const panel = answerPanel.value;
-  if (!panel) {
-    return;
-  }
-
-  panel.scrollIntoView({ block: "center", inline: "nearest" });
-}
-
-function clearPendingMobileScrolls() {
-  while (mobileScrollTimeoutIds.length) {
-    const timeoutId = mobileScrollTimeoutIds.pop();
-    window.clearTimeout(timeoutId);
-  }
-}
-
-function scheduleMobileAnswerRecenter() {
-  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
-    return;
-  }
-
-  clearPendingMobileScrolls();
-
-  const recenter = () => {
-    const inputElement = answerInput.value;
-    if (!inputElement || document.activeElement !== inputElement) {
-      return;
-    }
-
-    suppressScrollBlurUntil.value = Date.now() + 1200;
-    updateMobileKeyboardOffset();
-    scrollAnswerPanelIntoView();
-  };
-
-  requestAnimationFrame(() => {
-    requestAnimationFrame(recenter);
-  });
-
-  for (const delay of [120, 280, 420]) {
-    const timeoutId = window.setTimeout(recenter, delay);
-    mobileScrollTimeoutIds.push(timeoutId);
-  }
-}
-
 function onAnswerFocus() {
   if (!shouldAdjustForMobileKeyboard()) {
     return;
@@ -524,30 +458,10 @@ function onAnswerFocus() {
 
   document.body.classList.add("mobile-answer-focus");
   updateMobileKeyboardOffset();
-  suppressScrollBlurUntil.value = Date.now() + 1400;
-  scheduleMobileAnswerRecenter();
 }
 
 function onAnswerBlur() {
   if (typeof document === "undefined") {
-    return;
-  }
-
-  if (shouldAdjustForMobileKeyboard()) {
-    const now = Date.now();
-    if (now < allowInputBlurUntil.value) {
-      document.body.classList.remove("mobile-answer-focus");
-      setMobileKeyboardOffset(0);
-      return;
-    }
-
-    if (now < suppressInputBlurUntil.value) {
-      focusAnswerField().catch(() => {});
-      return;
-    }
-
-    // Keep the field active on mobile unless a scroll explicitly requested blur.
-    keepMobileKeyboardOpen(1200);
     return;
   }
 
@@ -557,43 +471,6 @@ function onAnswerBlur() {
 
 function onViewportResize() {
   updateMobileKeyboardOffset();
-
-  if (!shouldAdjustForMobileKeyboard()) {
-    return;
-  }
-
-  const inputElement = answerInput.value;
-  if (!inputElement || document.activeElement !== inputElement) {
-    return;
-  }
-
-  scheduleMobileAnswerRecenter();
-}
-
-function shouldHideKeyboardOnScroll() {
-  if (typeof window === "undefined") {
-    return false;
-  }
-
-  return window.matchMedia("(max-width: 640px)").matches;
-}
-
-function onWindowScroll() {
-  if (!shouldHideKeyboardOnScroll()) {
-    return;
-  }
-
-  if (Date.now() < suppressScrollBlurUntil.value) {
-    return;
-  }
-
-  const inputElement = answerInput.value;
-  if (!inputElement || document.activeElement !== inputElement) {
-    return;
-  }
-
-  allowInputBlurUntil.value = Date.now() + 450;
-  inputElement.blur();
 }
 
 async function goToNextQuestionOnAnyKey() {
@@ -602,7 +479,6 @@ async function goToNextQuestionOnAnyKey() {
   }
 
   advancingToNext.value = true;
-  keepMobileKeyboardOpen(1200);
   try {
     feedback.value = null;
     await loadQuestion();
@@ -638,7 +514,6 @@ function onWindowKeydown(event) {
 function onEnterInAnswerField(event) {
   event?.preventDefault();
   event?.stopPropagation();
-  keepMobileKeyboardOpen(1200);
 
   if (feedback.value) {
     goToNextQuestionOnAnyKey().catch(() => {});
@@ -785,12 +660,8 @@ function insertSpecialCharacter(character) {
   inputElement.setSelectionRange(nextPosition, nextPosition);
 }
 
-async function loadQuestion(options = {}) {
-  const { keepKeyboard = true, focusAnswer = true } = options;
+async function loadQuestion() {
   primeAudio().catch(() => {});
-  if (keepKeyboard) {
-    keepMobileKeyboardOpen(1200);
-  }
   stopTimer();
   loading.value = true;
   errorMessage.value = "";
@@ -823,12 +694,6 @@ async function loadQuestion(options = {}) {
     errorMessage.value = error.message;
   } finally {
     loading.value = false;
-    if (keepKeyboard) {
-      keepMobileKeyboardOpen(1200);
-    }
-    if (focusAnswer) {
-      focusAnswerField().catch(() => {});
-    }
   }
 }
 
@@ -904,7 +769,6 @@ async function validateAnswer(forceSubmit = false) {
 onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
-  window.addEventListener("scroll", onWindowScroll, { passive: true });
   window.visualViewport?.addEventListener("resize", onViewportResize);
   updateMobileKeyboardOffset();
   loadJourneyProgress();
@@ -927,7 +791,7 @@ onMounted(async () => {
 
     syncLevelWithGame(journey.value.currentGame);
     ensureHistoryBucket(currentLevel.value);
-    await loadQuestion({ keepKeyboard: false, focusAnswer: false });
+    await loadQuestion();
   } catch (error) {
     errorMessage.value = error.message;
     config.value = {
@@ -941,9 +805,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  clearPendingMobileScrolls();
   window.removeEventListener("keydown", onWindowKeydown);
-  window.removeEventListener("scroll", onWindowScroll);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
@@ -1001,18 +863,6 @@ onUnmounted(() => {
         <h1>Entraîne-toi et deviens imbattable !</h1>
         <p class="subtitle">Niveaux CECRL, correction instantanée et progression automatique.</p>
 
-        <div class="chapter-summary">
-          <div>
-            <p class="chapter-summary-label">Partie en cours</p>
-            <p class="chapter-summary-title">Partie {{ currentGameNumber }}</p>
-            <p class="chapter-summary-subtitle">{{ VERBS_PER_GAME }} verbes à valider</p>
-          </div>
-          <div class="chapter-summary-meta">
-            <span>{{ currentLevel }}</span>
-            <span>{{ currentGameState.attempts }}/{{ VERBS_PER_GAME }}</span>
-          </div>
-        </div>
-
         <div class="controls">
           <label>
             Niveau
@@ -1029,7 +879,7 @@ onUnmounted(() => {
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }">
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
             type="button"
             class="tense-filter-toggle"
@@ -1060,7 +910,7 @@ onUnmounted(() => {
           </div>
         </div>
 
-        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }">
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
             type="button"
             class="tense-filter-toggle"
@@ -1095,7 +945,7 @@ onUnmounted(() => {
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
-        <div class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
+        <div ref="quizPromptCard" class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
           <Transition name="feedback-toast">
             <div
               v-if="feedbackToast"
