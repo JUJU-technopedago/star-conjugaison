@@ -303,12 +303,33 @@ function releaseAnswerFocusForPreferenceSelection() {
 }
 
 function scrollPromptCardIntoView() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
   const panel = quizPromptCard.value;
   if (!panel) {
     return;
   }
 
-  panel.scrollIntoView({ block: "start", inline: "nearest" });
+  const viewport = window.visualViewport;
+  const viewportOffsetTop = viewport?.offsetTop ?? 0;
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+  const visibleTop = window.scrollY + viewportOffsetTop + 12;
+  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - 20;
+
+  const rect = panel.getBoundingClientRect();
+  const top = window.scrollY + rect.top;
+  const bottom = window.scrollY + rect.bottom;
+
+  if (top < visibleTop) {
+    window.scrollTo({ top: Math.max(0, window.scrollY - (visibleTop - top)), behavior: "auto" });
+    return;
+  }
+
+  if (bottom > visibleBottom) {
+    window.scrollTo({ top: window.scrollY + (bottom - visibleBottom), behavior: "auto" });
+  }
 }
 
 function initLevelPoolSelection(level) {
