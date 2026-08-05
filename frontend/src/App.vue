@@ -461,35 +461,42 @@ function centerAnswerPanelInVisibleViewport() {
 
   const panel = answerCardPanel.value;
   const promptCard = quizPromptCard.value;
-  if (!panel) {
+  if (!panel || !promptCard) {
     return;
   }
 
   const viewport = window.visualViewport;
   const viewportOffsetTop = viewport?.offsetTop ?? 0;
   const viewportHeight = viewport?.height ?? window.innerHeight;
-  const padding = 16;
-  const visibleTop = window.scrollY + viewportOffsetTop + padding;
-  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - padding;
-  const visibleCenter = (visibleTop + visibleBottom) / 2;
+  const guardTop = 12;
+  const guardBottom = 12;
+  const visibleTop = window.scrollY + viewportOffsetTop + guardTop;
+  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - guardBottom;
 
+  const promptRect = promptCard.getBoundingClientRect();
   const panelRect = panel.getBoundingClientRect();
-  const panelCenter = window.scrollY + panelRect.top + panelRect.height / 2;
-  const scrollDelta = panelCenter - visibleCenter;
+  const promptTop = window.scrollY + promptRect.top;
+  const promptBottom = window.scrollY + promptRect.bottom;
+  const panelBottom = window.scrollY + panelRect.bottom;
 
-  if (Math.abs(scrollDelta) < 24) {
-    return;
+  let nextTop = window.scrollY;
+
+  // 1) Keep the full prompt card visible, including the top border.
+  if (promptTop < visibleTop) {
+    nextTop -= (visibleTop - promptTop);
+  }
+  if (promptBottom > visibleBottom) {
+    nextTop += (promptBottom - visibleBottom);
   }
 
-  let nextTop = Math.max(0, window.scrollY + scrollDelta);
-
-  if (promptCard) {
-    const promptRect = promptCard.getBoundingClientRect();
-    const promptTop = window.scrollY + promptRect.top;
-    const guardTop = 6;
-    const maxTopToKeepPromptVisible = Math.max(0, promptTop - viewportOffsetTop - guardTop);
-    nextTop = Math.min(nextTop, maxTopToKeepPromptVisible);
+  // 2) Keep the answer area visible above keyboard when possible.
+  if (panelBottom > visibleBottom) {
+    nextTop += (panelBottom - visibleBottom);
   }
+
+  // Never scroll so far down that the prompt top gets clipped.
+  const maxTopToKeepPromptVisible = Math.max(0, promptTop - viewportOffsetTop - guardTop);
+  nextTop = Math.min(Math.max(0, nextTop), maxTopToKeepPromptVisible);
 
   if (Math.abs(nextTop - window.scrollY) < 24) {
     return;
