@@ -310,6 +310,15 @@ function releaseAnswerFocusForPreferenceSelection() {
   setMobileKeyboardOffset(0);
 }
 
+function scrollPromptCardIntoView() {
+  const panel = quizPromptCard.value;
+  if (!panel) {
+    return;
+  }
+
+  panel.scrollIntoView({ block: "start", inline: "nearest" });
+}
+
 function initLevelPoolSelection(level) {
   const pools = config.value.levels?.[level]?.pools ?? [];
   selectedPoolKeysByLevel.value[level] = pools.map((pool) => buildPoolKey(pool));
@@ -458,6 +467,11 @@ function onAnswerFocus() {
 
   document.body.classList.add("mobile-answer-focus");
   updateMobileKeyboardOffset();
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      scrollPromptCardIntoView();
+    });
+  });
 }
 
 function onAnswerBlur() {
@@ -876,8 +890,9 @@ onUnmounted(() => {
               <option v-for="[key, mode] in modeList" :key="key" :value="key">{{ mode.label }}</option>
             </select>
           </label>
-          <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
+
+        <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer !</button>
 
         <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
@@ -942,6 +957,7 @@ onUnmounted(() => {
           </div>
           </div>
         </div>
+
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
