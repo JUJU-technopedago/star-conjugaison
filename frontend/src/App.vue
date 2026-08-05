@@ -460,6 +460,7 @@ function centerAnswerPanelInVisibleViewport() {
   }
 
   const panel = answerCardPanel.value;
+  const promptCard = quizPromptCard.value;
   if (!panel) {
     return;
   }
@@ -480,7 +481,16 @@ function centerAnswerPanelInVisibleViewport() {
     return;
   }
 
-  const nextTop = Math.max(0, window.scrollY + scrollDelta);
+  let nextTop = Math.max(0, window.scrollY + scrollDelta);
+
+  if (promptCard) {
+    const promptRect = promptCard.getBoundingClientRect();
+    const promptTop = window.scrollY + promptRect.top;
+    const guardTop = 6;
+    const maxTopToKeepPromptVisible = Math.max(0, promptTop - viewportOffsetTop - guardTop);
+    nextTop = Math.min(nextTop, maxTopToKeepPromptVisible);
+  }
+
   if (Math.abs(nextTop - window.scrollY) < 24) {
     return;
   }
