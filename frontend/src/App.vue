@@ -878,21 +878,20 @@ onUnmounted(() => {
         <p class="subtitle">Niveaux CECRL, correction instantanée et progression automatique.</p>
 
         <div class="controls">
-          <label>
+          <label class="level-control">
             Niveau
             <select v-model="currentLevel" @change="onLevelChange">
               <option v-for="level in levelList" :key="level" :value="level">{{ level }}</option>
             </select>
           </label>
-          <label class="locked-control">
+          <label v-if="false" class="locked-control">
             Mode
             <select v-model="currentMode" @change="loadQuestion" disabled aria-disabled="true">
               <option v-for="[key, mode] in modeList" :key="key" :value="key">{{ mode.label }}</option>
             </select>
           </label>
+          <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer</button>
         </div>
-
-        <button class="hero-primary-action" @click="loadQuestion" :disabled="loading">Commencer !</button>
 
         <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }" @pointerdown.capture="releaseAnswerFocusForPreferenceSelection">
           <button
@@ -903,7 +902,6 @@ onUnmounted(() => {
           >
             <span>
               <span class="tense-filter-title">Groupes de verbes</span>
-              <span class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</span>
             </span>
             <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
           </button>
@@ -934,7 +932,6 @@ onUnmounted(() => {
           >
             <span>
               <span class="tense-filter-title">Temps d'entraînement</span>
-              <span class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</span>
             </span>
             <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
           </button>
