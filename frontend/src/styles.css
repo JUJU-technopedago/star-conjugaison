@@ -287,12 +287,13 @@ html {
 
 .preference-row {
   display: flex;
+  flex-direction: column;
   gap: 8px;
   margin-top: 12px;
 }
 
 .preference-row .tense-filter-box {
-  flex: 1 1 0;
+  flex: 1 1 auto;
   margin-top: 0;
   min-width: 0;
 }
@@ -654,6 +655,42 @@ button:disabled {
   padding: 8px 12px;
   border-radius: 8px;
   font-weight: 700;
+}
+
+@media (min-width: 641px) {
+  .answer-row {
+    grid-template-columns: minmax(0, 75%);
+    justify-content: end;
+  }
+
+  .answer-row--with-person {
+    grid-template-columns: auto minmax(0, 75%);
+    justify-content: end;
+  }
+
+  .special-keyboard {
+    width: 75%;
+    margin-left: auto;
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    align-items: start;
+  }
+
+  .special-keyboard-label {
+    grid-column: 1 / -1;
+    margin: 0;
+    color: #0f172a;
+  }
+
+  .special-key {
+    width: 100%;
+    min-width: 0;
+    border: 1px solid #cbd5e1;
+    background: #ffffff;
+    color: #0f172a;
+    box-shadow: none;
+  }
 }
 
 .ko {
