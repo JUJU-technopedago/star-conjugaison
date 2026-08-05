@@ -32,6 +32,7 @@ const mobilePreferencesOpen = ref({
 });
 
 let mobileCenteringFrameId = null;
+let mobileCenteringTimeoutIds = [];
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -499,19 +500,52 @@ function scheduleMobileAnswerCentering() {
   });
 }
 
+function clearMobileCenteringSchedule() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (mobileCenteringFrameId !== null) {
+    window.cancelAnimationFrame(mobileCenteringFrameId);
+    mobileCenteringFrameId = null;
+  }
+
+  for (const timeoutId of mobileCenteringTimeoutIds) {
+    window.clearTimeout(timeoutId);
+  }
+  mobileCenteringTimeoutIds = [];
+}
+
+function stabilizeMobileFocusPosition() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
+    return;
+  }
+
+  // First pass: act immediately on first tap/focus.
+  scheduleMobileAnswerCentering();
+
+  // Follow-up passes: catch delayed visualViewport updates while keyboard animates.
+  for (const delayMs of [80, 180, 320, 480]) {
+    const timeoutId = window.setTimeout(() => {
+      if (typeof document !== "undefined" && document.body.classList.contains("mobile-answer-focus")) {
+        updateMobileKeyboardOffset();
+        scheduleMobileAnswerCentering();
+      }
+    }, delayMs);
+    mobileCenteringTimeoutIds.push(timeoutId);
+  }
+}
+
 function onAnswerFocus() {
   if (!shouldAdjustForMobileKeyboard()) {
     return;
   }
 
   document.body.classList.add("mobile-answer-focus");
+  clearMobileCenteringSchedule();
   updateMobileKeyboardOffset();
-  requestAnimationFrame(() => {
-    requestAnimationFrame(() => {
-      scrollPromptCardIntoView();
-      scheduleMobileAnswerCentering();
-    });
-  });
+  scrollPromptCardIntoView();
+  stabilizeMobileFocusPosition();
 }
 
 function onAnswerBlur() {
@@ -521,11 +555,7 @@ function onAnswerBlur() {
 
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
-
-  if (typeof window !== "undefined" && mobileCenteringFrameId !== null) {
-    window.cancelAnimationFrame(mobileCenteringFrameId);
-    mobileCenteringFrameId = null;
-  }
+  clearMobileCenteringSchedule();
 }
 
 function onViewportResize() {
@@ -833,6 +863,7 @@ onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
   window.visualViewport?.addEventListener("resize", onViewportResize);
+  window.visualViewport?.addEventListener("scroll", onViewportResize);
   updateMobileKeyboardOffset();
   loadJourneyProgress();
 
@@ -870,11 +901,8 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
-
-  if (mobileCenteringFrameId !== null) {
-    window.cancelAnimationFrame(mobileCenteringFrameId);
-    mobileCenteringFrameId = null;
-  }
+  window.visualViewport?.removeEventListener("scroll", onViewportResize);
+  clearMobileCenteringSchedule();
 
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
