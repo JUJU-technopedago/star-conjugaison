@@ -17,6 +17,7 @@ const historyByLevel = ref({});
 const errorMessage = ref("");
 const answerInput = ref(null);
 const answerPanel = ref(null);
+const quizPromptCard = ref(null);
 const specialCharacters = ["é", "è", "ê", "â", "î", "ô", "û"];
 const timeLeft = ref(null);
 const timerId = ref(null);
@@ -474,12 +475,12 @@ function updateMobileKeyboardOffset() {
 }
 
 function scrollAnswerPanelIntoView() {
-  const panel = answerPanel.value;
+  const panel = quizPromptCard.value ?? answerPanel.value;
   if (!panel) {
     return;
   }
 
-  panel.scrollIntoView({ block: "center", inline: "nearest" });
+  panel.scrollIntoView({ block: "start", inline: "nearest" });
 }
 
 function clearPendingMobileScrolls() {
@@ -536,6 +537,7 @@ function onAnswerBlur() {
   if (shouldAdjustForMobileKeyboard()) {
     const now = Date.now();
     if (now < allowInputBlurUntil.value) {
+      clearPendingMobileScrolls();
       document.body.classList.remove("mobile-answer-focus");
       setMobileKeyboardOffset(0);
       return;
@@ -546,11 +548,13 @@ function onAnswerBlur() {
       return;
     }
 
-    // Keep the field active on mobile unless a scroll explicitly requested blur.
-    keepMobileKeyboardOpen(1200);
+    clearPendingMobileScrolls();
+    document.body.classList.remove("mobile-answer-focus");
+    setMobileKeyboardOffset(0);
     return;
   }
 
+  clearPendingMobileScrolls();
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
 }
@@ -592,6 +596,8 @@ function onWindowScroll() {
     return;
   }
 
+  clearPendingMobileScrolls();
+  suppressInputBlurUntil.value = 0;
   allowInputBlurUntil.value = Date.now() + 450;
   inputElement.blur();
 }
@@ -605,7 +611,7 @@ async function goToNextQuestionOnAnyKey() {
   keepMobileKeyboardOpen(1200);
   try {
     feedback.value = null;
-    await loadQuestion();
+    await loadQuestion({ keepKeyboard: true, focusAnswer: true });
   } finally {
     advancingToNext.value = false;
   }
@@ -786,7 +792,7 @@ function insertSpecialCharacter(character) {
 }
 
 async function loadQuestion(options = {}) {
-  const { keepKeyboard = true, focusAnswer = true } = options;
+  const { keepKeyboard = false, focusAnswer = false } = options;
   primeAudio().catch(() => {});
   if (keepKeyboard) {
     keepMobileKeyboardOpen(1200);
@@ -1095,7 +1101,7 @@ onUnmounted(() => {
       </section>
 
       <section class="card quiz" v-if="currentQuestion" ref="answerPanel">
-        <div class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
+        <div ref="quizPromptCard" class="quiz-main-card" :class="{ 'has-toast': feedbackToast }">
           <Transition name="feedback-toast">
             <div
               v-if="feedbackToast"
