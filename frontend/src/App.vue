@@ -28,6 +28,10 @@ const suppressScrollBlurUntil = ref(0);
 const suppressInputBlurUntil = ref(0);
 const allowInputBlurUntil = ref(0);
 const mobileScrollTimeoutIds = [];
+const mobilePreferencesOpen = ref({
+  verbGroups: false,
+  tenses: false
+});
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -286,6 +290,13 @@ function formatPoolLabel(pool) {
   }
 
   return label;
+}
+
+function toggleMobilePreferencePanel(panelKey) {
+  mobilePreferencesOpen.value = {
+    ...mobilePreferencesOpen.value,
+    [panelKey]: !mobilePreferencesOpen.value[panelKey]
+  };
 }
 
 function initLevelPoolSelection(level) {
@@ -1018,9 +1029,20 @@ onUnmounted(() => {
           <button @click="loadQuestion" :disabled="loading">Nouvelle question</button>
         </div>
 
-        <div class="tense-filter-box">
-          <p class="tense-filter-title">Groupes de verbes</p>
-          <p class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</p>
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.verbGroups }">
+          <button
+            type="button"
+            class="tense-filter-toggle"
+            :aria-expanded="mobilePreferencesOpen.verbGroups ? 'true' : 'false'"
+            @click="toggleMobilePreferencePanel('verbGroups')"
+          >
+            <span>
+              <span class="tense-filter-title">Groupes de verbes</span>
+              <span class="tense-filter-subtitle">Choisis les groupes sur lesquels t'entraîner.</span>
+            </span>
+            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div class="tense-filter-content">
           <div class="tense-filter-grid">
             <label
               v-for="choice in VERB_GROUP_CHOICES"
@@ -1035,11 +1057,23 @@ onUnmounted(() => {
               <span v-html="choice.label"></span>
             </label>
           </div>
+          </div>
         </div>
 
-        <div class="tense-filter-box">
-          <p class="tense-filter-title">Temps d'entraînement</p>
-          <p class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</p>
+        <div class="tense-filter-box" :class="{ 'is-open': mobilePreferencesOpen.tenses }">
+          <button
+            type="button"
+            class="tense-filter-toggle"
+            :aria-expanded="mobilePreferencesOpen.tenses ? 'true' : 'false'"
+            @click="toggleMobilePreferencePanel('tenses')"
+          >
+            <span>
+              <span class="tense-filter-title">Temps d'entraînement</span>
+              <span class="tense-filter-subtitle">Choisis les temps que tu veux travailler.</span>
+            </span>
+            <span class="tense-filter-chevron" aria-hidden="true">⌄</span>
+          </button>
+          <div class="tense-filter-content">
           <div class="tense-filter-grid">
             <label
               v-for="pool in currentLevelPoolChoices"
@@ -1055,6 +1089,7 @@ onUnmounted(() => {
               />
               <span v-html="pool.label"></span>
             </label>
+          </div>
           </div>
         </div>
       </section>

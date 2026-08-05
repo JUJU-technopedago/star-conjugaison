@@ -331,6 +331,27 @@ html {
   font-size: 0.92rem;
 }
 
+.tense-filter-toggle {
+  display: none;
+}
+
+.tense-filter-content {
+  display: block;
+}
+
+.tense-filter-chevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  color: #1e3a8a;
+  transition: transform 160ms ease;
+}
+
+.tense-filter-box.is-open .tense-filter-chevron {
+  transform: rotate(180deg);
+}
+
 .tense-filter-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
@@ -698,6 +719,53 @@ button:disabled {
 
   .tense-filter-grid {
     grid-template-columns: 1fr;
+  }
+
+  .tense-filter-box {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .tense-filter-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 12px;
+    border-radius: 0;
+    min-height: 0;
+    background: transparent;
+    color: inherit;
+    text-align: left;
+  }
+
+  .tense-filter-toggle:hover {
+    transform: none;
+    filter: none;
+  }
+
+  .tense-filter-toggle .tense-filter-title,
+  .tense-filter-toggle .tense-filter-subtitle {
+    display: block;
+  }
+
+  .tense-filter-toggle .tense-filter-subtitle {
+    margin: 4px 0 0;
+  }
+
+  .tense-filter-box > .tense-filter-title,
+  .tense-filter-box > .tense-filter-subtitle {
+    display: none;
+  }
+
+  .tense-filter-content {
+    display: none;
+    padding: 0 12px 12px;
+  }
+
+  .tense-filter-box.is-open .tense-filter-content {
+    display: block;
   }
 
   .answer-row {
