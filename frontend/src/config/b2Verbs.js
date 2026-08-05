@@ -1,5 +1,5 @@
 // Auto-generated from base_verbes.xlsx
-// Generated at 2026-08-05T21:00:17.176Z. Do not edit manually.
+// Generated at 2026-08-05T22:32:16.068Z. Do not edit manually.
 
 import { LEVEL_GROUP_ALLOWED_VERBS, LEVEL_ALLOWED_VERBS } from './verbBase.generated.js';
 

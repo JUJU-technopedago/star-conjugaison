@@ -1,5 +1,5 @@
 // Auto-generated from base_verbes.xlsx
-// Generated at 2026-08-05T21:00:17.182Z. Do not edit manually.
+// Generated at 2026-08-05T22:32:16.071Z. Do not edit manually.
 
 import { GLOBAL_ALLOWED_VERBS as GENERATED_GLOBAL_ALLOWED_VERBS } from './verbBase.generated.js';
 

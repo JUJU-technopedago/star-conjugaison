@@ -1,5 +1,5 @@
-// Auto-generated from base_verbes.xlsx (586 rows)
-// Generated at 2026-08-05T21:00:17.158Z. Do not edit manually.
+// Auto-generated from base_verbes.xlsx (587 rows)
+// Generated at 2026-08-05T22:32:16.059Z. Do not edit manually.
 
 export const VERB_BASE = [
   {
@@ -2980,7 +2980,7 @@ export const VERB_BASE = [
   },
   {
     "infinitif": "choisir",
-    "niveau": "A2",
+    "niveau": "A1",
     "groupe": 2,
     "pronominal": false,
     "participePasse": "choisi",
@@ -7132,7 +7132,7 @@ export const VERB_BASE = [
   },
   {
     "infinitif": "finir",
-    "niveau": "B1",
+    "niveau": "A1",
     "groupe": 2,
     "pronominal": false,
     "participePasse": "fini",
@@ -10203,6 +10203,30 @@ export const VERB_BASE = [
     }
   },
   {
+    "infinitif": "remplir",
+    "niveau": "A1",
+    "groupe": 2,
+    "pronominal": false,
+    "participePasse": "rempli",
+    "participePresent": "remplissant",
+    "impersonnel": false,
+    "defectif": false,
+    "auxiliaire1": "avoir",
+    "auxiliaire2": "",
+    "difficulte": 2,
+    "terminaisons": {
+      "er": false,
+      "ir": true,
+      "oir": false,
+      "endre": false,
+      "eindre": false,
+      "oudre": false,
+      "ger": false,
+      "cer": false,
+      "ier": false
+    }
+  },
+  {
     "infinitif": "renaître",
     "niveau": "B1",
     "groupe": 3,
@@ -10612,7 +10636,7 @@ export const VERB_BASE = [
   },
   {
     "infinitif": "réussir",
-    "niveau": "A2",
+    "niveau": "A1",
     "groupe": 2,
     "pronominal": false,
     "participePasse": "réussi",
@@ -14078,6 +14102,7 @@ export const LEVEL_ALLOWED_VERBS = {
     "boire",
     "charger",
     "chiffrer",
+    "choisir",
     "comprendre",
     "compter",
     "concerner",
@@ -14104,6 +14129,7 @@ export const LEVEL_ALLOWED_VERBS = {
     "expliquer",
     "faire",
     "falloir",
+    "finir",
     "forcer",
     "former",
     "importer",
@@ -14134,9 +14160,11 @@ export const LEVEL_ALLOWED_VERBS = {
     "prévoir",
     "produire",
     "proposer",
+    "remplir",
     "rendre",
     "reprendre",
     "rester",
+    "réussir",
     "revenir",
     "risquer",
     "s'amuser",
@@ -14193,7 +14221,6 @@ export const LEVEL_ALLOWED_VERBS = {
     "cesser",
     "changer",
     "chercher",
-    "choisir",
     "classer",
     "commander",
     "commencer",
@@ -14247,7 +14274,6 @@ export const LEVEL_ALLOWED_VERBS = {
     "rencontrer",
     "répondre",
     "réserver",
-    "réussir",
     "s'aider",
     "s'arrêter",
     "s'inquiéter",
@@ -14350,7 +14376,6 @@ export const LEVEL_ALLOWED_VERBS = {
     "fabriquer",
     "faciliter",
     "favoriser",
-    "finir",
     "imaginer",
     "impliquer",
     "imposer",
@@ -14734,7 +14759,12 @@ export const LEVEL_GROUP_ALLOWED_VERBS = {
       "sembler",
       "trouver"
     ],
-    "group2": [],
+    "group2": [
+      "choisir",
+      "finir",
+      "remplir",
+      "réussir"
+    ],
     "group3": [
       "aller",
       "atteindre",
@@ -14858,10 +14888,8 @@ export const LEVEL_GROUP_ALLOWED_VERBS = {
       "voyager"
     ],
     "group2": [
-      "choisir",
       "fournir",
-      "garantir",
-      "réussir"
+      "garantir"
     ],
     "group3": [
       "acquérir",
@@ -14993,8 +15021,7 @@ export const LEVEL_GROUP_ALLOWED_VERBS = {
     "group2": [
       "agir",
       "définir",
-      "établir",
-      "finir"
+      "établir"
     ],
     "group3": [
       "accueillir",
@@ -15721,6 +15748,7 @@ export const GLOBAL_ALLOWED_VERBS = [
   "remarquer",
   "remercier",
   "remonter",
+  "remplir",
   "renaître",
   "rencontrer",
   "rendre",
