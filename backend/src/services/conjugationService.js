@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { IMPERSONAL_LEMMAS } from "../config/verbBase.generated.js";
+import { IMPERSONAL_LEMMAS, VERB_BASE } from "../config/verbBase.generated.js";
 import { normalizeKey } from "../utils/normalize.js";
 import { detectVerbGroup, normalizeSelectedVerbGroups } from "../config/verbGroups.js";
 
@@ -11,6 +11,29 @@ const DATA_FILE = path.resolve(__dirname, "../../../frontend/src/data/verbs.json
 
 const SIX_PERSON_LABELS = ["je", "tu", "il/elle", "nous", "vous", "ils/elles"];
 const THREE_PERSON_IMPERATIVE_LABELS = ["tu", "nous", "vous"];
+const GROUP_KEY_BY_NUMBER = {
+  1: "group1",
+  2: "group2",
+  3: "group3"
+};
+const VERB_GROUP_BY_LEMMA = new Map();
+
+for (const entry of VERB_BASE) {
+  const normalizedInfinitive = normalizeKey(entry?.infinitif);
+  const groupKey = GROUP_KEY_BY_NUMBER[Number(entry?.groupe)] ?? null;
+  if (!normalizedInfinitive || !groupKey) {
+    continue;
+  }
+
+  VERB_GROUP_BY_LEMMA.set(normalizedInfinitive, groupKey);
+
+  if (normalizedInfinitive.startsWith("se ")) {
+    const bareLemma = normalizedInfinitive.slice(3);
+    if (bareLemma && !VERB_GROUP_BY_LEMMA.has(bareLemma)) {
+      VERB_GROUP_BY_LEMMA.set(bareLemma, groupKey);
+    }
+  }
+}
 
 function isSixPersonTense(forms) {
   return Array.isArray(forms) && forms.length === 6 && forms.every((form) => typeof form === "string");
@@ -46,6 +69,11 @@ function getAllowedPersonIndexes(lemma, moodKey, formsLength) {
   }
 
   return null;
+}
+
+function getConfiguredVerbGroup(lemma) {
+  const normalizedLemma = normalizeKey(lemma);
+  return VERB_GROUP_BY_LEMMA.get(normalizedLemma) ?? VERB_GROUP_BY_LEMMA.get(`se ${normalizedLemma}`) ?? detectVerbGroup(lemma);
 }
 
 function getLemma(entry) {
@@ -131,7 +159,7 @@ class ConjugationService {
         continue;
       }
 
-      if (useGroupFilter && !selectedGroupSet.has(detectVerbGroup(verb.lemma))) {
+      if (useGroupFilter && !selectedGroupSet.has(getConfiguredVerbGroup(verb.lemma))) {
         continue;
       }
 

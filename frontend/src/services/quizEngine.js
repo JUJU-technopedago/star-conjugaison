@@ -5,7 +5,7 @@ import { A2_ALLOWED_VERBS } from '../config/a2Verbs.js';
 import { B1_ALLOWED_VERBS } from '../config/b1Verbs.js';
 import { B2_ALLOWED_VERBS } from '../config/b2Verbs.js';
 import { C1_ALLOWED_VERBS } from '../config/c1Verbs.js';
-import { IMPERSONAL_LEMMAS, PRONOMINAL_LEMMAS } from '../config/verbBase.generated.js';
+import { IMPERSONAL_LEMMAS, PRONOMINAL_LEMMAS, VERB_BASE } from '../config/verbBase.generated.js';
 import { detectVerbGroup, normalizeSelectedVerbGroups } from '../config/verbGroups.js';
 import { normalizeKey } from './normalize.js';
 import verbs from './verbesData.js';
@@ -16,6 +16,29 @@ const recentLemmaByScope = new Map();
 const MAX_RECENT_LEMMAS = 4;
 const DEFAULT_MODE = 'trouver_conjugaison';
 const NORMALIZED_PRONOMINAL_LEMMAS = new Set(Array.from(PRONOMINAL_LEMMAS, (lemma) => normalizeKey(lemma)));
+const GROUP_KEY_BY_NUMBER = {
+  1: 'group1',
+  2: 'group2',
+  3: 'group3'
+};
+const VERB_GROUP_BY_LEMMA = new Map();
+
+for (const entry of VERB_BASE) {
+  const normalizedInfinitive = normalizeKey(entry?.infinitif);
+  const groupKey = GROUP_KEY_BY_NUMBER[Number(entry?.groupe)] ?? null;
+  if (!normalizedInfinitive || !groupKey) {
+    continue;
+  }
+
+  VERB_GROUP_BY_LEMMA.set(normalizedInfinitive, groupKey);
+
+  if (normalizedInfinitive.startsWith('se ')) {
+    const bareLemma = normalizedInfinitive.slice(3);
+    if (bareLemma && !VERB_GROUP_BY_LEMMA.has(bareLemma)) {
+      VERB_GROUP_BY_LEMMA.set(bareLemma, groupKey);
+    }
+  }
+}
 
 const GAME_MODES = {
   trouver_conjugaison: { label: 'Trouver la conjugaison' },
@@ -96,6 +119,11 @@ function ensureMode(mode) {
 
 function normalizeLemma(lemma) {
   return normalizeKey(lemma);
+}
+
+function getConfiguredVerbGroup(lemma) {
+  const normalizedLemma = normalizeLemma(lemma);
+  return VERB_GROUP_BY_LEMMA.get(normalizedLemma) ?? VERB_GROUP_BY_LEMMA.get(`se ${normalizedLemma}`) ?? detectVerbGroup(lemma);
 }
 
 function expandReflexiveVariants(lemmas) {
@@ -582,7 +610,7 @@ function pickQuestion(poolDefinitions, options = {}) {
       continue;
     }
 
-    if (useGroupFilter && !selectedGroupSet.has(detectVerbGroup(verb.lemma))) {
+    if (useGroupFilter && !selectedGroupSet.has(getConfiguredVerbGroup(verb.lemma))) {
       continue;
     }
 

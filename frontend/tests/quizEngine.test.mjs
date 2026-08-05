@@ -176,3 +176,20 @@ test('question prompt keeps non-pronominal infinitive without se', () => {
   assert.doesNotMatch(question.prompt, /\bSE\s+FINIR\b/i);
   assert.equal(question.displayLemma, 'finir');
 });
+
+test('revenir is classified as group3 from Excel reference', () => {
+  const wrongGroupQuestion = createQuestion('B1', 'trouver_conjugaison', {
+    allowedLemmas: ['revenir'],
+    verbGroups: ['group2']
+  });
+
+  assert.equal(wrongGroupQuestion, null);
+
+  const rightGroupQuestion = createQuestion('B1', 'trouver_conjugaison', {
+    allowedLemmas: ['revenir'],
+    verbGroups: ['group3']
+  });
+
+  assert.ok(rightGroupQuestion);
+  assert.equal(rightGroupQuestion.lemma, 'revenir');
+});
