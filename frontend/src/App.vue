@@ -31,9 +31,9 @@ const mobilePreferencesOpen = ref({
   tenses: false
 });
 
-let mobileCenteringFrameId = null;
-let mobileCenteringTimeoutIds = [];
-let mobileFocusStabilizationUntil = 0;
+let mobileAnchorFrameId = null;
+let mobileFollowUpTimeoutIds = [];
+let isMobileFocusActive = false;
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -298,12 +298,14 @@ function releaseAnswerFocusForPreferenceSelection() {
     inputElement.blur();
   }
 
+  isMobileFocusActive = false;
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
+  clearMobileFocusFollowUps();
 }
 
-function scrollPromptCardIntoView() {
-  if (typeof window === "undefined") {
+function anchorPromptToVisibleTop() {
+  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
     return;
   }
 
@@ -314,21 +316,110 @@ function scrollPromptCardIntoView() {
 
   const viewport = window.visualViewport;
   const viewportOffsetTop = viewport?.offsetTop ?? 0;
-  const viewportHeight = viewport?.height ?? window.innerHeight;
-  const visibleTop = window.scrollY + viewportOffsetTop + 12;
-  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - 20;
+  const guardTop = 12;
 
-  const rect = panel.getBoundingClientRect();
-  const top = window.scrollY + rect.top;
-  const bottom = window.scrollY + rect.bottom;
+  const rectTop = panel.getBoundingClientRect().top;
+  const targetScrollY = Math.max(
+    0,
+    window.scrollY + rectTop - viewportOffsetTop - guardTop
+  );
 
-  if (top < visibleTop) {
-    window.scrollTo({ top: Math.max(0, window.scrollY - (visibleTop - top)), behavior: "auto" });
+  if (Math.abs(targetScrollY - window.scrollY) < 2) {
     return;
   }
 
-  if (bottom > visibleBottom) {
-    window.scrollTo({ top: window.scrollY + (bottom - visibleBottom), behavior: "auto" });
+  window.scrollTo({ top: targetScrollY, behavior: "auto" });
+}
+
+function scheduleMobileFocusAnchors() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  clearMobileFocusFollowUps();
+
+  // Immediate pass on the next frame.
+  mobileAnchorFrameId = window.requestAnimationFrame(() => {
+    mobileAnchorFrameId = null;
+    updateMobileKeyboardOffset();
+    anchorPromptToVisibleTop();
+  });
+
+  // Follow-up passes covering the keyboard open animation across devices.
+  for (const delayMs of [180, 400, 700]) {
+    const timeoutId = window.setTimeout(() => {
+      if (!isMobileFocusActive) {
+        return;
+      }
+      updateMobileKeyboardOffset();
+      anchorPromptToVisibleTop();
+    }, delayMs);
+    mobileFollowUpTimeoutIds.push(timeoutId);
+  }
+}
+
+function clearMobileFocusFollowUps() {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  if (mobileAnchorFrameId !== null) {
+    window.cancelAnimationFrame(mobileAnchorFrameId);
+    mobileAnchorFrameId = null;
+  }
+
+  for (const timeoutId of mobileFollowUpTimeoutIds) {
+    window.clearTimeout(timeoutId);
+  }
+  mobileFollowUpTimeoutIds = [];
+}
+
+function onAnswerFocus() {
+  if (!shouldAdjustForMobileKeyboard()) {
+    return;
+  }
+
+  isMobileFocusActive = true;
+  document.body.classList.add("mobile-answer-focus");
+  updateMobileKeyboardOffset();
+  scheduleMobileFocusAnchors();
+}
+
+function onAnswerBlur() {
+  if (typeof document === "undefined") {
+    return;
+  }
+
+  isMobileFocusActive = false;
+  document.body.classList.remove("mobile-answer-focus");
+  setMobileKeyboardOffset(0);
+  clearMobileFocusFollowUps();
+}
+
+function onViewportResize() {
+  updateMobileKeyboardOffset();
+  if (isMobileFocusActive) {
+    anchorPromptToVisibleTop();
+  }
+}
+
+function onViewportScroll() {
+  if (!isMobileFocusActive || typeof window === "undefined") {
+    return;
+  }
+
+  const panel = quizPromptCard.value;
+  if (!panel) {
+    return;
+  }
+
+  const viewport = window.visualViewport;
+  const viewportOffsetTop = viewport?.offsetTop ?? 0;
+  const rectTop = panel.getBoundingClientRect().top;
+
+  // Re-anchor if the browser drifted the prompt off the visible viewport top.
+  if (rectTop < viewportOffsetTop - 4 || rectTop > viewportOffsetTop + 48) {
+    anchorPromptToVisibleTop();
   }
 }
 
@@ -473,148 +564,6 @@ function updateMobileKeyboardOffset() {
 
   const keyboardHeight = window.innerHeight - viewport.height;
   setMobileKeyboardOffset(keyboardHeight);
-}
-
-function centerAnswerPanelInVisibleViewport() {
-  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
-    return;
-  }
-
-  const panel = answerCardPanel.value;
-  const promptCard = quizPromptCard.value;
-  if (!panel || !promptCard) {
-    return;
-  }
-
-  const viewport = window.visualViewport;
-  const viewportOffsetTop = viewport?.offsetTop ?? 0;
-  const viewportHeight = viewport?.height ?? window.innerHeight;
-  const guardTop = 12;
-  const guardBottom = 12;
-  const visibleTop = window.scrollY + viewportOffsetTop + guardTop;
-  const visibleBottom = window.scrollY + viewportOffsetTop + viewportHeight - guardBottom;
-
-  const promptRect = promptCard.getBoundingClientRect();
-  const panelRect = panel.getBoundingClientRect();
-  const promptTop = window.scrollY + promptRect.top;
-  const promptBottom = window.scrollY + promptRect.bottom;
-  const panelBottom = window.scrollY + panelRect.bottom;
-
-  let nextTop = window.scrollY;
-
-  // 1) Keep the full prompt card visible, including the top border.
-  if (promptTop < visibleTop) {
-    nextTop -= (visibleTop - promptTop);
-  }
-  if (promptBottom > visibleBottom) {
-    nextTop += (promptBottom - visibleBottom);
-  }
-
-  // 2) Keep the answer area visible above keyboard when possible.
-  if (panelBottom > visibleBottom) {
-    nextTop += (panelBottom - visibleBottom);
-  }
-
-  // Never scroll so far down that the prompt top gets clipped.
-  const maxTopToKeepPromptVisible = Math.max(0, promptTop - viewportOffsetTop - guardTop);
-  nextTop = Math.min(Math.max(0, nextTop), maxTopToKeepPromptVisible);
-
-  if (Math.abs(nextTop - window.scrollY) < 24) {
-    return;
-  }
-
-  window.scrollTo({
-    top: nextTop,
-    behavior: "auto"
-  });
-}
-
-function scheduleMobileAnswerCentering() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (mobileCenteringFrameId !== null) {
-    window.cancelAnimationFrame(mobileCenteringFrameId);
-  }
-
-  mobileCenteringFrameId = window.requestAnimationFrame(() => {
-    mobileCenteringFrameId = null;
-    centerAnswerPanelInVisibleViewport();
-  });
-}
-
-function clearMobileCenteringSchedule() {
-  if (typeof window === "undefined") {
-    return;
-  }
-
-  if (mobileCenteringFrameId !== null) {
-    window.cancelAnimationFrame(mobileCenteringFrameId);
-    mobileCenteringFrameId = null;
-  }
-
-  for (const timeoutId of mobileCenteringTimeoutIds) {
-    window.clearTimeout(timeoutId);
-  }
-  mobileCenteringTimeoutIds = [];
-}
-
-function stabilizeMobileFocusPosition() {
-  if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
-    return;
-  }
-
-  mobileFocusStabilizationUntil = Date.now() + 800;
-
-  // First pass: act immediately on first tap/focus.
-  scheduleMobileAnswerCentering();
-
-  // Follow-up passes: catch delayed visualViewport updates while keyboard animates.
-  for (const delayMs of [80, 180, 320, 480]) {
-    const timeoutId = window.setTimeout(() => {
-      if (typeof document !== "undefined" && document.body.classList.contains("mobile-answer-focus")) {
-        updateMobileKeyboardOffset();
-        scheduleMobileAnswerCentering();
-      }
-    }, delayMs);
-    mobileCenteringTimeoutIds.push(timeoutId);
-  }
-}
-
-function onAnswerFocus() {
-  if (!shouldAdjustForMobileKeyboard()) {
-    return;
-  }
-
-  document.body.classList.add("mobile-answer-focus");
-  clearMobileCenteringSchedule();
-  updateMobileKeyboardOffset();
-  scrollPromptCardIntoView();
-  stabilizeMobileFocusPosition();
-}
-
-function onAnswerBlur() {
-  if (typeof document === "undefined") {
-    return;
-  }
-
-  document.body.classList.remove("mobile-answer-focus");
-  mobileFocusStabilizationUntil = 0;
-  setMobileKeyboardOffset(0);
-  clearMobileCenteringSchedule();
-}
-
-function onViewportResize() {
-  updateMobileKeyboardOffset();
-
-  if (
-    typeof document !== "undefined" &&
-    document.body.classList.contains("mobile-answer-focus") &&
-    Date.now() <= mobileFocusStabilizationUntil
-  ) {
-    scheduleMobileAnswerCentering();
-  }
 }
 
 async function goToNextQuestionOnAnyKey() {
@@ -914,6 +863,7 @@ onMounted(async () => {
   loading.value = true;
   window.addEventListener("keydown", onWindowKeydown);
   window.visualViewport?.addEventListener("resize", onViewportResize);
+  window.visualViewport?.addEventListener("scroll", onViewportScroll);
   updateMobileKeyboardOffset();
   loadJourneyProgress();
 
@@ -951,8 +901,9 @@ onMounted(async () => {
 onUnmounted(() => {
   window.removeEventListener("keydown", onWindowKeydown);
   window.visualViewport?.removeEventListener("resize", onViewportResize);
-  mobileFocusStabilizationUntil = 0;
-  clearMobileCenteringSchedule();
+  window.visualViewport?.removeEventListener("scroll", onViewportScroll);
+  isMobileFocusActive = false;
+  clearMobileFocusFollowUps();
 
   document.body.classList.remove("mobile-answer-focus");
   setMobileKeyboardOffset(0);
