@@ -342,27 +342,33 @@ function onAnswerZonePointerDown(event) {
   });
 }
 
-function anchorPromptToVisibleTop() {
+function anchorAnswerInputToVisibleViewport() {
   if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
     return;
   }
 
-  const panel = quizPromptCard.value;
-  if (!panel) {
+  const inputElement = answerInput.value;
+  if (!inputElement) {
     return;
   }
 
   const viewport = window.visualViewport;
-  const viewportOffsetTop = viewport?.offsetTop ?? 0;
-  const guardTop = 12;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportHeight = viewport?.height ?? window.innerHeight;
+  const viewportBottom = viewportTop + viewportHeight;
+  const topGuard = 10;
+  const bottomGuard = 14;
 
-  const rectTop = panel.getBoundingClientRect().top;
-  const targetScrollY = Math.max(
-    0,
-    window.scrollY + rectTop - viewportOffsetTop - guardTop
-  );
+  const rect = inputElement.getBoundingClientRect();
+  let targetScrollY = null;
 
-  if (Math.abs(targetScrollY - window.scrollY) < 2) {
+  if (rect.bottom > viewportBottom - bottomGuard) {
+    targetScrollY = window.scrollY + (rect.bottom - (viewportBottom - bottomGuard));
+  } else if (rect.top < viewportTop + topGuard) {
+    targetScrollY = Math.max(0, window.scrollY + rect.top - (viewportTop + topGuard));
+  }
+
+  if (targetScrollY === null || Math.abs(targetScrollY - window.scrollY) < 2) {
     return;
   }
 
@@ -380,7 +386,7 @@ function scheduleMobileFocusAnchors() {
   mobileAnchorFrameId = window.requestAnimationFrame(() => {
     mobileAnchorFrameId = null;
     updateMobileKeyboardOffset();
-    anchorPromptToVisibleTop();
+    anchorAnswerInputToVisibleViewport();
   });
 
   // Follow-up passes covering the keyboard open animation across devices.
@@ -390,7 +396,7 @@ function scheduleMobileFocusAnchors() {
         return;
       }
       updateMobileKeyboardOffset();
-      anchorPromptToVisibleTop();
+      anchorAnswerInputToVisibleViewport();
     }, delayMs);
     mobileFollowUpTimeoutIds.push(timeoutId);
   }
@@ -437,7 +443,7 @@ function onAnswerBlur() {
 function onViewportResize() {
   updateMobileKeyboardOffset();
   if (isMobileFocusActive) {
-    anchorPromptToVisibleTop();
+    anchorAnswerInputToVisibleViewport();
   }
 }
 
@@ -446,18 +452,19 @@ function onViewportScroll() {
     return;
   }
 
-  const panel = quizPromptCard.value;
-  if (!panel) {
+  const inputElement = answerInput.value;
+  if (!inputElement) {
     return;
   }
 
   const viewport = window.visualViewport;
-  const viewportOffsetTop = viewport?.offsetTop ?? 0;
-  const rectTop = panel.getBoundingClientRect().top;
+  const viewportTop = viewport?.offsetTop ?? 0;
+  const viewportBottom = viewportTop + (viewport?.height ?? window.innerHeight);
+  const rect = inputElement.getBoundingClientRect();
 
-  // Re-anchor if the browser drifted the prompt off the visible viewport top.
-  if (rectTop < viewportOffsetTop - 4 || rectTop > viewportOffsetTop + 48) {
-    anchorPromptToVisibleTop();
+  // Re-anchor if the browser drifted the answer input outside the visible viewport.
+  if (rect.top < viewportTop + 6 || rect.bottom > viewportBottom - 10) {
+    anchorAnswerInputToVisibleViewport();
   }
 }
 
