@@ -304,6 +304,44 @@ function releaseAnswerFocusForPreferenceSelection() {
   clearMobileFocusFollowUps();
 }
 
+function isInteractiveTarget(target) {
+  if (!(target instanceof HTMLElement)) {
+    return false;
+  }
+
+  return Boolean(
+    target.closest("input, textarea, button, select, option, a, label, [contenteditable='true'], [role='button']")
+  );
+}
+
+function focusAnswerInputWithRetry() {
+  const inputElement = answerInput.value;
+  if (!inputElement) {
+    return;
+  }
+
+  inputElement.focus({ preventScroll: true });
+
+  if (document.activeElement === inputElement || typeof window === "undefined") {
+    return;
+  }
+
+  window.setTimeout(() => {
+    inputElement.focus({ preventScroll: true });
+  }, 0);
+}
+
+function onAnswerZonePointerDown(event) {
+  if (isInteractiveTarget(event?.target)) {
+    return;
+  }
+
+  event?.preventDefault();
+  nextTick(() => {
+    focusAnswerInputWithRetry();
+  });
+}
+
 function anchorPromptToVisibleTop() {
   if (!shouldAdjustForMobileKeyboard() || typeof window === "undefined") {
     return;
@@ -1071,7 +1109,7 @@ onUnmounted(() => {
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
-        <div class="answer-panel" ref="answerCardPanel">
+        <div class="answer-panel" ref="answerCardPanel" @pointerdown="onAnswerZonePointerDown">
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
