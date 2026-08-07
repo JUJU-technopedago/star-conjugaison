@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, onMounted, onUnmounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { createQuestion, checkAnswer, computeProgression, getLevelRules, getGameModes } from "./services/quizEngine";
 import { VERB_GROUP_CHOICES } from "./config/verbGroups";
 import { playFinalWhistle, playTickSound, primeAudio } from "./services/timerAudio";
@@ -34,6 +34,7 @@ const mobilePreferencesOpen = ref({
 let mobileAnchorFrameId = null;
 let mobileFollowUpTimeoutIds = [];
 let isMobileFocusActive = false;
+let lastAnswerZoneTouchEndAt = 0;
 
 const fallbackLevels = ["A1", "A2", "B1", "B2", "C1"];
 const fallbackModes = {
@@ -331,15 +332,26 @@ function focusAnswerInputWithRetry() {
   }, 0);
 }
 
-function onAnswerZonePointerDown(event) {
+function onAnswerZoneTap(event) {
+  if (Date.now() - lastAnswerZoneTouchEndAt < 450) {
+    return;
+  }
+
   if (isInteractiveTarget(event?.target)) {
     return;
   }
 
+  focusAnswerInputWithRetry();
+}
+
+function onAnswerZoneTouchEnd(event) {
+  if (isInteractiveTarget(event?.target)) {
+    return;
+  }
+
+  lastAnswerZoneTouchEndAt = Date.now();
   event?.preventDefault();
-  nextTick(() => {
-    focusAnswerInputWithRetry();
-  });
+  focusAnswerInputWithRetry();
 }
 
 function anchorAnswerInputToVisibleViewport() {
@@ -1116,7 +1128,7 @@ onUnmounted(() => {
 
         <p v-if="timeLeft !== null" class="timer-inline">Temps restant: {{ timeLeft }}s</p>
 
-        <div class="answer-panel" ref="answerCardPanel" @pointerdown="onAnswerZonePointerDown">
+        <div class="answer-panel" ref="answerCardPanel" @touchend="onAnswerZoneTouchEnd" @click="onAnswerZoneTap">
           <div class="answer-row" :class="{ 'answer-row--with-person': answerPersonPrompt }">
             <span class="answer-person-prefix" :class="{ 'is-hidden': !answerPersonPrompt }">{{ answerPersonPrompt }}</span>
             <input
